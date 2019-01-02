@@ -6,6 +6,7 @@ Various scripts for macOS tasks
 ### `debug`
 - Print some debug info about the current system
 - Usage: `./debug`
+- Usage: `./debug | pbcopy` (Copies output to the clipboard)
 
 
 ### `signature_check`
