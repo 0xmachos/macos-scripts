@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# macos-scripts/signature_check
+
+# signature_check
+#  Check for applications which are not code signed
+#  Check for apps that are notarized
+
+set -uo pipefail
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+readonly RESET=$(tput sgr0)
+readonly BOLD=$(tput bold)
+
+readonly RED=$(tput setaf 1)
+readonly GREEN=$(tput setaf 64)
+### END Colours ###
+
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+
+function main {
+
+  trap ctrl_c SIGINT
+  # Detect and react to the user hitting CTRL + C
+
+  while IFS=$'\n' read -r app; do 
+    apps+=("${app}"); 
+  done < <(system_profiler SPApplicationsDataType \
+            | grep "Location: " \
+            | awk -F ': ' '{print $2}')
+
+
+  for app in "${apps[@]}"; do
+    if ! pkgutil --check-signature "${app}" >/dev/null; then
+      echo "[❌] ${RED}NOT SIGNED:${RESET} ${app}"
+      pkgutil --check-signature "${app}"
+      codesign --verify "${app}"
+      echo ""
+    
+    elif spctl --assess -v "${app}" 2>&1 | grep -q 'Notarized' ; then
+      echo "[✅] ${GREEN}Notarized:${RESET} ${app}"
+      echo ""
+    fi
+  done
+}
+
+main "$@"

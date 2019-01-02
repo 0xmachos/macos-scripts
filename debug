@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+# macos-scripts/debug
+
+# debug
+#  Print some debug info about the current system
+
+set -uo pipefail
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### UTILITY FUNCTIONS ###
+# ctrl_c
+# usage
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+
+function usage {
+  echo -e "\\n  Print some debug info about the current system"
+  echo -e "  ./debug | pbcopy\\n"
+
+  exit 0
+}
+
+### END UTILITY FUNCTIONS ###
+
+
+function timestamp {
+
+  echo "Timestamp: $(date)"
+}
+
+
+function version_info {
+
+  build=$(sw_vers | grep "Build" | awk '{print $2}')
+  version=$(sw_vers | grep "ProductVersion" | awk '{print $2}')
+  
+  echo "macOS: ${version} (Build: ${build})"
+}
+
+
+function hardware_info {
+
+  hardware_data=$(system_profiler SPHardwareDataType)
+  model=$(echo "${hardware_data}" | grep "Identifier" | awk '{print $3}')
+  ram=$(echo "${hardware_data}" | grep "Memory: " | awk -F ':' '{print $2}')
+  processor_name=$(echo "${hardware_data}" | grep "Processor Name: " | awk -F ':' '{print $2}')
+  processor_speed=$(echo "${hardware_data}" | grep "Processor Speed: " | awk -F ':' '{print $2}')
+  
+  echo "Model: ${model}"
+  echo "RAM: ${ram}"
+  
+  echo "Processor: 
+  ${processor_name}
+  ${processor_speed}"
+}
+
+
+function time_stats {
+
+  last_reboot=$(last reboot | head -1  | awk -F "                         " '{print $2}')
+  uptime=$(uptime | awk -F ',' '{print $1}' | awk -F 'up' '{print $2}')
+
+  echo "Boot time: ${last_reboot}"
+  echo "Uptime: ${uptime}"
+}
+
+
+function filesystem_info {
+
+  spotlight_status=$(mdutil -s / | grep 'Indexing' | awk '{print $2}' | tr -d '.')
+  fs_type=$(diskutil info / | grep 'Type (Bundle):' | awk '{print $3}')
+
+  echo "File System Type: ${fs_type}"
+  echo "Spotlight status for '/': ${spotlight_status}"
+}
+
+
+function security_info {
+
+  gatekeeper_status=$(spctl --status | awk '{print $2}')
+  kext_loading_stats=$(spctl kext-consent status | awk -F ': ' '{print $2}')
+  sip_status=$(csrutil status | awk -F ': ' '{print $2}' | tr -d '.')
+  filevault_status=$(fdesetup status | awk '{print $3}' | tr -d '.')
+  
+  echo "Gatekeeper Status: ${gatekeeper_status}"
+  echo "Kernel Extension User Consent: ${kext_loading_stats}"
+  echo "System Integrity Protection status: ${sip_status}"
+  echo "FileVault status: ${filevault_status}"
+
+  # if system_profiler SPiBridgeDataType | grep 'Model Name:' | grep -q 'T2'; then 
+  #   :
+  # else
+  #   if /usr/libexec/firmwarecheckers/eficheck/eficheck --integrity-check >/dev/null 2>&1; then
+  #     echo "EFI Firmware: "
+  #   fi
+  # fi
+}
+
+
+function full_disk_access_check {
+
+  if [ -r "/$HOME/Library/Mail" ]; then
+    echo "Terminal Full Disk Access: Enabled"
+  else
+    echo "Terminal Full Disk Access: Disabled"
+  fi
+}
+
+
+function launchd_stuff {
+
+  echo "User Launchd Processes:"
+  launchctl list | grep -v 'com.apple' | tail -n +2 | awk '{print $3}'
+}
+
+
+function third_party_kexts {
+
+  echo "Third party Kernel Extensions:"
+  kextstat | grep -v 'com.apple' | tail -1 | awk '{print $6}'
+}
+
+
+function main {
+
+  declare -r arg=${1:-" "}
+
+  trap ctrl_c SIGINT
+  # Detect and react to the user hitting CTRL + C
+  
+  functions=(timestamp version_info hardware_info time_stats filesystem_info security_info \
+            full_disk_access_check launchd_stuff third_party_kexts)
+
+  case "${arg}" in
+
+    usage|help|-h|--help|🤷‍♂️|🤷‍♀️|"¯\_(ツ)_/¯")
+      usage
+      shift
+      ;;
+    
+    *)
+      echo
+      for function in "${functions[@]}"; do
+        "${function}"
+        echo
+      done
+      exit 0
+      shift
+      ;;
+
+  esac
+}
+
+main "$@"

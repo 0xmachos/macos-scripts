@@ -1,0 +1,9 @@
+# .travis.yml
+# macos-scripts/.travis.yml
+
+language: bash
+sudo: enabled
+script:
+  - ./test
+notifications:
+  email: false

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# macos-scripts/x86_check
+
+# x86_check
+#  Check whole system for 32-bit apps
+
+set -euo pipefail
+# -e exit if any command returns non-zero status code
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+readonly RESET=$(tput sgr0)
+readonly BOLD=$(tput bold)
+
+readonly RED=$(tput setaf 1)
+readonly GREEN=$(tput setaf 64)
+### END Colours ###
+
+
+function usage {
+
+  echo -e "\\nCheck whole system for 32-bit applications"
+  echo "Usage:"
+  echo "  ./x86_check"
+  exit 0
+}
+
+
+function get_applications {
+
+  mapfile -t bad_apps< <(system_profiler SPApplicationsDataType \
+                        | grep -E '^    .*:$|64-Bit \(Intel\):|Location' \
+                        | grep -A1 ': No' \
+                        | grep 'Location' \
+                        | sed -e 's/.*Location: //' )
+
+  # Massive thanks to @MacLemon for this oneliner
+}
+
+
+function main {
+
+  local cmd=${1:-""}
+  declare -a bad_apps
+
+  if [[ "${cmd}" =~ ^(-h|-H|-help|--help|help)$ ]]; then
+    usage
+  fi
+
+  get_applications
+
+  if [ ${#bad_apps[@]} -eq 0 ]; then
+    echo "[✅] No 32-bit applications found"
+  else
+    echo "[❌] Found ${RED}${#bad_apps[@]}${RESET} 32-bit Applications:"
+    
+    for app in "${bad_apps[@]}"; do
+      echo "  ${app}"
+    done
+
+  fi
+}
+
+main "$@"
