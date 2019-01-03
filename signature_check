@@ -38,6 +38,8 @@ function main {
   trap ctrl_c SIGINT
   # Detect and react to the user hitting CTRL + C
 
+  declare -a apps
+
   while IFS=$'\n' read -r app; do 
     apps+=("${app}"); 
   done < <(system_profiler SPApplicationsDataType \
