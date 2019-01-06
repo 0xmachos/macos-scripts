@@ -4,6 +4,7 @@
 # signature_check
 #  Check for applications which are not code signed
 #  Check for apps that are notarized
+#  Execution time approximately 5 to 10 minutes
 
 set -uo pipefail
 # -u prevent using undefined variables
@@ -39,6 +40,10 @@ function main {
   # Detect and react to the user hitting CTRL + C
 
   declare -a apps
+  declare -a notarized
+  declare -a no_signature
+  declare -a untrusted_certificate
+  declare -a broken
 
   while IFS=$'\n' read -r app; do 
     apps+=("${app}"); 
@@ -49,16 +54,53 @@ function main {
 
   for app in "${apps[@]}"; do
     if ! pkgutil --check-signature "${app}" >/dev/null; then
-      echo "[❌] ${RED}NOT SIGNED:${RESET} ${app}"
-      pkgutil --check-signature "${app}"
-      codesign --verify "${app}"
-      echo ""
-    
+      output="$(pkgutil --check-signature "${app}")"
+      if echo "${output}" | grep -q "no signature"; then
+        no_signature+=("${app}");
+      elif echo "${output}" | grep -q "untrusted certificate"; then
+        untrusted_certificate+=("${app}");
+      elif echo "${output}" | grep -q "invalid"; then
+        broken+=("${app}");
+      fi
     elif spctl --assess -v "${app}" 2>&1 | grep -q 'Notarized' ; then
-      echo "[✅] ${GREEN}Notarized:${RESET} ${app}"
-      echo ""
+      notarized+=("${app}");
     fi
   done
+
+
+  if [ ${#notarized[@]} -gt 0 ]; then
+     echo "${GREEN}Notarized (${#notarized[@]}):${RESET}" 
+    for app in "${notarized[@]}"; do
+      echo "  ${app}"
+    done
+  fi
+
+  echo
+  
+  if [ ${#no_signature[@]} -gt 0 ]; then
+     echo "${RED}Not Signed (${#no_signature[@]}):${RESET}" 
+    for app in "${no_signature[@]}"; do
+      echo "  ${app}"
+    done
+  fi
+
+  echo
+
+  if [ ${#untrusted_certificate[@]} -gt 0 ]; then
+    echo "${RED}Signed with untrusted certificate (${#untrusted_certificate[@]}):${RESET}" 
+    for app in "${untrusted_certificate[@]}"; do
+      echo "  ${app}"
+    done
+  fi
+
+  echo 
+
+  if [ ${#broken[@]} -gt 0 ]; then
+    echo "${RED}Broken Signature: (${#broken[@]}):${RESET}" 
+    for app in "${broken[@]}"; do
+      echo "  ${app}"
+    done
+  fi
 }
 
 main "$@"
