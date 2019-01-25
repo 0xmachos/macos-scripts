@@ -39,11 +39,13 @@ function usage {
 
 function get_applications {
 
-  mapfile -t bad_apps< <(system_profiler SPApplicationsDataType \
-                        | grep -E '^    .*:$|64-Bit \(Intel\):|Location' \
-                        | grep -A1 ': No' \
-                        | grep 'Location' \
-                        | sed -e 's/.*Location: //' )
+  while IFS=$'\n' read -r app; do 
+    bad_apps+=("${app}"); 
+  done < <(system_profiler SPApplicationsDataType \
+            | grep -E '^    .*:$|64-Bit \(Intel\):|Location' \
+            | grep -A1 ': No' \
+            | grep 'Location' \
+            | sed -e 's/.*Location: //' )
 
   # Massive thanks to @MacLemon for this oneliner
 }
