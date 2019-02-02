@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# macos-scripts/quarantine_score
+
+# quarantine_score
+#   For files with the com.apple.quarantine extended attribute
+#   Print the name of the file and the quarantine flag value
+
+
+set -euo pipefail
+# -e exit if any command returns non-zero status code
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+readonly RED="$(tput setaf 1)"
+readonly RESET="$(tput sgr0)"
+readonly BOLD="$(tput bold)"
+
+### END Colours ###
+
+
+### UTILITY FUNCTIONS ###
+# ctrl_c
+
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+
+### END UTILITY FUNCTIONS ###
+
+
+function usage {
+
+  echo -e "\\nPrint gatekeeper score if file has the com.apple.quarantine extended attribute. Highlights scores other than '0083'"
+  echo "  ./quarantine_score {directory_path}"
+  echo -e "  {directory_path} defaults to $HOME/Downloads\\n"
+
+  exit 0
+}
+
+
+function get_files {
+  
+  while IFS=$'\n' read -r file; do 
+    files+=("${file}"); 
+  done < <(find "${arg}" -type f -maxdepth 1)
+}
+
+
+function procees_files {
+
+  for file in "${files[@]}"; do
+    if xattr "${file}" | grep -q 'quarantine'; then 
+      flag=$(xattr -p "com.apple.quarantine" "${file}" | awk -F ';' '{print $1}')
+      
+      if [ "${flag}" != "0083" ]; then
+        echo -e "File: ${file}\\nFlag: ${RED}${flag}${RESET}"
+      else
+        file_name=$(basename "${file}")
+        echo -e "File: ${file_name}\\nFlag: ${flag}"
+      fi
+    fi
+  done
+}
+
+
+function main {
+
+  trap ctrl_c SIGINT
+  # Detect and react to the user hitting CTRL + C
+
+  declare -a files
+  
+  arg=${1:-"$HOME/Downloads"}
+  
+  case "${arg}" in
+    usage|help|-h|--help|🤷‍♂️|🤷‍♀️|"¯\_(ツ)_/¯")
+      usage
+      ;;
+
+    *)
+      if [[ -d "${arg}" ]]; then
+        get_files
+        procees_files
+      else
+        echo "[❌] ${arg} is not a directory"
+        exit 1
+      fi
+      ;;
+  esac  
+}
+
+main "$@"
