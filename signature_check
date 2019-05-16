@@ -6,8 +6,7 @@
 #  Check for apps that are notarized
 #  Execution time approximately 5 to 10 minutes
 
-set -uo pipefail
-# -u prevent using undefined variables
+set -o pipefail
 # -o pipefail force pipelines to fail on first non-zero status code
 
 
