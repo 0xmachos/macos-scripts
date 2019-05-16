@@ -47,9 +47,9 @@ function get_applications {
 function check_applications {
 
   for app in "${apps[@]}"; do
-    if ! pkgutil --check-signature "${app}" >/dev/null; then
+    
+    if ! output="$(pkgutil --check-signature "${app}")"; then 
       
-      output="$(pkgutil --check-signature "${app}")"
       if echo "${output}" | grep -q "no signature"; then
         not_signed+=("${app}");
 
