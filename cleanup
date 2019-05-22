@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# macos-scripts/cleanup
+
+# cleanup
+#  Purge some caches and take out the trash
+
+set -euo pipefail
+# -e exit if any command returns non-zero status code
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+readonly RED="$(tput setaf 1)"
+readonly RESET="$(tput sgr0)"
+readonly BOLD="$(tput bold)"
+
+### END Colours ###
+
+### UTILITY FUNCTIONS ###
+# check_developer_tools
+
+
+function check_developer_tools {
+
+  if ! xcode-select -p >/dev/null 2>&1; then 
+    echo "[❌] Command line developer tools required"
+    echo "[🍺] Install via: xcode-select --install"
+    exit 1
+  fi
+}
+
+
+### END UTILITY FUNCTIONS ###
+
+
+function clean_xcode {
+  # Delete old iOS simulators
+
+  echo "[🗑] Deleting old Xcode iOS Simulators"
+  
+  if check_developer_tools; then 
+    xcrun simctl delete unavailable
+  fi
+}
+
+
+function clean_brew {
+  # Remove outdated downloads for formulae and casks, 
+  # and remove old versions of installed formulae.
+  # Scrub the cache of the latest versions
+
+  echo "[🗑] Cleaning Brew"
+  
+  if [ -x "$(command -v brew)" ]; then
+    brew cleanup -s
+    # Remove cache for installed formula and cask 
+    rm -rf "$(brew --cache)"
+  fi
+}
+
+
+function clean_ruby {
+  # Remove old versions of gems 
+  # that are not required to meet a dependency.
+
+  echo "[🗑] Cleaning Ruby Gems"
+
+  if [ -x "/usr/local/opt/ruby/bin/gem" ]; then
+    /usr/local/opt/ruby/bin/gem cleanup >/dev/null 2>&1
+  fi
+}
+
+
+function empty_trash {
+
+  echo "[🗑] Emptying Trash"
+
+  rm -rf "${HOME:?}/.Trash/"*
+}
+
+
+function main {
+
+  clean_brew
+  clean_ruby
+  empty_trash
+}
+
+main "$@"
