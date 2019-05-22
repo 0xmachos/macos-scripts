@@ -60,7 +60,7 @@ function check_kexts {
   echo
   echo "[👀] Checking Loaded Kexts"
 
-  if kextstat | grep -v "com.apple" | tail -n -3 | awk '{print $6}' | grep -q 'com.vmware.kext'; then
+  if kextstat | grep -q 'com.vmware.kext.VMwareGfx' || kextstat | grep -q 'com.vmware.kext.vmhgfs'; then
     echo "[⚠️ ] Probably VMware"
   fi
 
