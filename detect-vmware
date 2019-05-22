@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# macos-scripts/detect-vmware
+
+# detect-vmware
+#  Try to determine if we're in a VMware Virtual Machine       
+#  https://github.com/LordNoteworthy/al-khaser/blob/master/al-khaser/AntiVM/VMWare.cpp
+
+set -uo pipefail
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+
+function check_mac_address {
+
+  # VMware, Inc MAC address vendor identifiers 
+  # 00:05:69, 00:0c:29, 00:1C:14, 00:50:56
+
+  echo "[👀] Checking Network Adaptor MAC Address(es)"
+
+  ethernet_mac=$(networksetup -getmacaddress ethernet | awk '{print $3}')
+
+  if wifi_mac="$(networksetup -getmacaddress wi-fi | awk '{print $3}')"; then
+    if [[ "${wifi_mac}" =~ 00:05:69|00:0c:29|00:1C:14|00:50:56 ]]; then
+      echo "[⚠️ ] Probably VMware"
+      echo "[🤔] However, there is a Wi-Fi interface so maybe not?"
+    fi
+  fi
+  
+  if [[ "${ethernet_mac}" =~ 00:05:69|00:0c:29|00:1C:14|00:50:56 ]]; then
+    echo "[⚠️ ] Probably VMware"
+  fi
+
+  echo
+}
+
+function check_shared_folders {
+
+  echo "[👀] Checking for Shared Folders Directory"
+
+  if [[ -d "/Volumes/VMware Shared Folders" ]]; then 
+    echo "[⚠️ ] Probably VMware"
+  fi
+
+  echo 
+}
+
+function check_kexts {
+
+  echo "[👀] Checking Installed Kexts"
+
+  if [[ -d "/Library/Extensions/VMwareGfx.kext" ]]; then 
+    echo "[⚠️ ] Probably VMware"
+  fi
+
+  echo
+  echo "[👀] Checking Loaded Kexts"
+
+  if kextstat | grep -v "com.apple" | tail -n -3 | awk '{print $6}' | grep -q 'com.vmware.kext'; then
+    echo "[⚠️ ] Probably VMware"
+  fi
+
+  echo
+}
+
+
+function main {
+
+  check_mac_address
+  check_shared_folders
+  check_kexts
+}
+
+main "$@"
