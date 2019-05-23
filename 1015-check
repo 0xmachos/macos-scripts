@@ -40,6 +40,7 @@ function check_kexts_notarized {
   done
 }
 
+
 function check_32_bit_code {
   # Thanks to @rtrouton for this one liner
   # https://twitter.com/rtrouton/status/1130482310762115072
@@ -55,7 +56,6 @@ function main {
   check_kexts_notarized
   echo
   check_32_bit_code
-
 }
 
 main "$@"
