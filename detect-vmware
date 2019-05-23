@@ -67,12 +67,25 @@ function check_kexts {
   echo
 }
 
+function check_drivers {
+
+  echo "[👀] Checking Drivers via I//O Registry"
+
+  if ioreg | grep "VMware" >/dev/null; then
+    # TODO: Absolutely no idea why grep "VMware" doesnt work
+    echo "[⚠️ ] Probably VMware"
+  fi
+
+  echo
+}
+
 
 function main {
 
   check_mac_address
   check_shared_folders
   check_kexts
+  check_drivers
 }
 
 main "$@"
