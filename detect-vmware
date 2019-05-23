@@ -79,6 +79,16 @@ function check_drivers {
   echo
 }
 
+function check_hardware_info {
+
+  echo "[👀] Checking System Hardware Data"
+
+  hardware_data=$(system_profiler SPHardwareDataType)
+
+  if echo "${hardware_data}" | grep -q 'VMware' || echo "${hardware_data}" | grep -q 'Virtual Machine' ; then
+    echo "[⚠️ ] Probably VMware"
+  fi
+}
 
 function main {
 
@@ -86,6 +96,7 @@ function main {
   check_shared_folders
   check_kexts
   check_drivers
+  check_hardware_info
 }
 
 main "$@"
