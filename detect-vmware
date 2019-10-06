@@ -21,9 +21,7 @@ function check_mac_address {
   # 00:05:69, 00:0c:29, 00:1C:14, 00:50:56
 
   echo "[👀] Checking Network Adaptor MAC Address(es)"
-
-  ethernet_mac=$(networksetup -getmacaddress ethernet | awk '{print $3}')
-
+  
   if wifi_mac="$(networksetup -getmacaddress wi-fi | awk '{print $3}')"; then
     if [[ "${wifi_mac}" =~ 00:05:69|00:0c:29|00:1C:14|00:50:56 ]]; then
       echo "[⚠️ ] Probably VMware"
@@ -31,10 +29,11 @@ function check_mac_address {
     fi
   fi
   
-  if [[ "${ethernet_mac}" =~ 00:05:69|00:0c:29|00:1C:14|00:50:56 ]]; then
-    echo "[⚠️ ] Probably VMware"
+  if ethernet_mac="$(networksetup -getmacaddress ethernet | awk '{print $3}')"; then
+    if [[ "${ethernet_mac}" =~ 00:05:69|00:0c:29|00:1C:14|00:50:56 ]]; then
+      echo "[⚠️ ] Probably VMware"
+    fi
   fi
-
   echo
 }
 
