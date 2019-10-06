@@ -33,6 +33,29 @@ function ctrl_c {
 }
 
 
+function xcode_check {
+
+  if xcode-select -p >/dev/null 2>&1; then 
+    xcode_status="True"
+  else
+    xcode_status="False"
+  fi
+}
+
+
+function version_check {
+
+current_macos_version="$(sw_vers -productVersion | awk -F '.' '{print $1 "." $2}')";
+
+  if [ "${current_macos_version}" = "10.14" ]; then
+    stapler_path="/Library/Developer/CommandLineTools/usr/bin/stapler"
+
+  elif [[ "${current_macos_version}" = "10.15" ]]; then
+    stapler_path="/usr/bin/stapler"
+  fi
+}
+
+
 function get_applications {
 
   while IFS=$'\n' read -r app; do 
@@ -59,8 +82,10 @@ function check_applications {
         broken_signature+=("${app}");
       fi
     
-    elif /Library/Developer/CommandLineTools/usr/bin/stapler validate "${app}" >/dev/null 2>&1 ; then
-      notarized+=("${app}");
+    elif [[ "${xcode_check}" = "True" ]]; then
+      if "${stapler_path}" validate "${app}" >/dev/null 2>&1; then
+        notarized+=("${app}");
+      fi
     fi
 done
 }
@@ -77,6 +102,11 @@ function main {
   declare -a signed_with_untrusted_certificate
   declare -a broken_signature
 
+  version_check
+  xcode_check
+  if [[ "${xcode_status}" = "False" ]]; then
+    echo "Can't check Notarisation status - Xcode Command Line Tools not installed"
+  fi
   get_applications
   check_applications
 
