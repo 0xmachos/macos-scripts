@@ -58,9 +58,7 @@ function bom_read {
   local pkg_name
 
   for bom in "${boms[@]}"; do
-    set -x
     pkg_name=$(echo "${bom}" | awk -F '/' '{print $(NF-1)}' | tr -d '.pkg')
-    set +xc
     lsbom "${bom}" > "${expand_dir}/${pkg_name}-Bom"
   done
 
