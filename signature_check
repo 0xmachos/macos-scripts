@@ -45,6 +45,8 @@ function xcode_check {
 
 function get_applications {
 
+  echo "Getting list of applications..."
+
   while IFS=$'\n' read -r app; do 
     apps+=("${app}"); 
   done < <(system_profiler SPApplicationsDataType \
