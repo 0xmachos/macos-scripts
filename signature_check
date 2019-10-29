@@ -95,7 +95,6 @@ function main {
   get_applications
   check_applications
 
-
   if [ ${#notarized[@]} -gt 0 ]; then
      echo "${GREEN}Notarized (${#notarized[@]}):${RESET}" 
     for app in "${notarized[@]}"; do
@@ -103,7 +102,6 @@ function main {
     done
     echo
   fi
-
 
   if [ ${#not_signed[@]} -gt 0 ]; then
      echo "${RED}Not Signed (${#not_signed[@]}):${RESET}" 
