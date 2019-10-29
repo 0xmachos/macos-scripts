@@ -58,21 +58,27 @@ function get_applications {
 function check_applications {
 
   for app in "${apps[@]}"; do
-    
-    if ! output="$(pkgutil --check-signature "${app}")"; then 
+
+    if ! output="$(codesign --verify --deep --strict "${app}" 2>&1)"; then
+      # Call codesign on every $app in $apps and save stdout to $output
       
-      if echo "${output}" | grep -q "no signature"; then
+      if echo "${output}" | grep -q "is not signed at all"; then
         not_signed+=("${app}");
 
-      elif echo "${output}" | grep -q "untrusted certificate"; then
-        signed_with_untrusted_certificate+=("${app}");
+      elif echo "${output}" | grep -q "resource fork, Finder information, or similar detritus not allowed"; then
+        xa_resource_fork_finder_information+=("${app}");
+        # xa = extended attribute
+        # https://developer.apple.com/library/archive/qa/qa1940/_index.html
 
-      elif echo "${output}" | grep -q "invalid"; then
+      elif echo "${output}" | grep -q "a sealed resource is missing or invalid"; then
         broken_signature+=("${app}");
+        # https://developer.apple.com/library/archive/technotes/tn2206/_index.html#//apple_ref/doc/uid/DTS40007919-CH1-TNTAG20
+      elif echo "${output}" | grep -q "CSSMERR_TP_CERT_REVOKED"; then
+        signed_with_revoked_certificate+=("${app}");
       fi
     
-    elif [[ "${xcode_check}" = "True" ]]; then
-      if "${stapler_path}" validate "${app}" >/dev/null 2>&1; then
+    else [[ "${xcode_status}" == "True" ]];
+      if "${stapler_path}" validate "${app}" >/dev/null 2>&1; then 
         notarized+=("${app}");
       fi
     fi
@@ -88,8 +94,10 @@ function main {
   declare -a apps
   declare -a notarized
   declare -a not_signed
-  declare -a signed_with_untrusted_certificate
+  declare -a signed_with_revoked_certificate
+  declare -a xa_resource_fork_finder_information
   declare -a broken_signature
+  readonly stapler_path="/usr/bin/stapler"
 
   xcode_check
   get_applications
@@ -111,15 +119,20 @@ function main {
     echo
   fi
 
-
-  if [ ${#signed_with_untrusted_certificate[@]} -gt 0 ]; then
-    echo "${RED}Signed with untrusted certificate (${#signed_with_untrusted_certificate[@]}):${RESET}" 
-    for app in "${signed_with_untrusted_certificate[@]}"; do
+  if [ ${#signed_with_revoked_certificate[@]} -gt 0 ]; then
+    echo "${RED}Signed with untrusted certificate (${#signed_with_revoked_certificate[@]}):${RESET}" 
+    for app in "${signed_with_revoked_certificate[@]}"; do
       echo "  ${app}"
     done
     echo
   fi
 
+  if [ ${#xa_resource_fork_finder_information[@]} -gt 0 ]; then
+    echo "${RED}Resource Fork or Finder Information: (${#xa_resource_fork_finder_information[@]}):${RESET}" 
+    for app in "${xa_resource_fork_finder_information[@]}"; do
+      echo "  ${app}"
+    done
+  fi
 
   if [ ${#broken_signature[@]} -gt 0 ]; then
     echo "${RED}Broken Signature: (${#broken_signature[@]}):${RESET}" 
