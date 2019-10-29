@@ -39,19 +39,7 @@ function xcode_check {
     xcode_status="True"
   else
     xcode_status="False"
-  fi
-}
-
-
-function version_check {
-
-current_macos_version="$(sw_vers -productVersion | awk -F '.' '{print $1 "." $2}')";
-
-  if [ "${current_macos_version}" = "10.14" ]; then
-    stapler_path="/Library/Developer/CommandLineTools/usr/bin/stapler"
-
-  elif [[ "${current_macos_version}" = "10.15" ]]; then
-    stapler_path="/usr/bin/stapler"
+    echo "Can't check Notarisation status - Xcode Command Line Tools not installed"
   fi
 }
 
@@ -102,11 +90,7 @@ function main {
   declare -a signed_with_untrusted_certificate
   declare -a broken_signature
 
-  version_check
   xcode_check
-  if [[ "${xcode_status}" = "False" ]]; then
-    echo "Can't check Notarisation status - Xcode Command Line Tools not installed"
-  fi
   get_applications
   check_applications
 
