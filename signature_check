@@ -57,6 +57,8 @@ function get_applications {
 
 function check_applications {
 
+  echo "Checking applications..."
+
   for app in "${apps[@]}"; do
 
     if ! output="$(codesign --verify --deep --strict "${app}" 2>&1)"; then
@@ -73,6 +75,7 @@ function check_applications {
       elif echo "${output}" | grep -q "a sealed resource is missing or invalid"; then
         broken_signature+=("${app}");
         # https://developer.apple.com/library/archive/technotes/tn2206/_index.html#//apple_ref/doc/uid/DTS40007919-CH1-TNTAG20
+      
       elif echo "${output}" | grep -q "CSSMERR_TP_CERT_REVOKED"; then
         signed_with_revoked_certificate+=("${app}");
       fi
@@ -103,6 +106,8 @@ function main {
   get_applications
   check_applications
 
+  echo 
+  
   if [ ${#notarized[@]} -gt 0 ]; then
      echo "${GREEN}Notarized (${#notarized[@]}):${RESET}" 
     for app in "${notarized[@]}"; do
@@ -132,6 +137,7 @@ function main {
     for app in "${xa_resource_fork_finder_information[@]}"; do
       echo "  ${app}"
     done
+    echo
   fi
 
   if [ ${#broken_signature[@]} -gt 0 ]; then
