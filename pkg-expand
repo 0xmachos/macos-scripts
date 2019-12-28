@@ -65,10 +65,45 @@ function bom_read {
 }
 
 
+function find_preinstall {
+  while IFS=$'\n' read -r preinstall; do 
+    preinstall_scripts+=("${preinstall}"); 
+  done < <(find "${expand_dir}" -name 'preinstall' -type f)
+}
+
+function check_preinstall {
+
+  for script in "${preinstall_scripts[@]}"; do
+    echo "Checking ${script}"
+    grep -ni "cp /tmp" "${script}"
+    grep -ni "chmod 777 /Applications" "${script}"
+    grep -ni "chown root:admin /Applications/" "${script}"
+  done
+}
+
+function find_postinstall {
+  while IFS=$'\n' read -r postinstall; do 
+    postinstall_scripts+=("${postinstall}"); 
+  done < <(find "${expand_dir}" -name 'postinstall' -type f)
+}
+
+function check_postinstall {
+
+  for script in "${postinstall_scripts[@]}"; do
+    echo "Checking ${script}"
+    grep -ni "cp /tmp" "${script}"
+    grep -ni "chmod 777 /Applications" "${script}"
+    grep -ni "chown root:admin /Applications/" "${script}"
+  done
+}
+
+
 function main {
 
   declare -a packages
   declare -a boms
+  declare -a preinstall_scripts
+  declare -a postinstall_scripts
 
   arg=${1:-"usage"}
 
@@ -85,6 +120,11 @@ function main {
   unpack
   bom_search
   bom_read
+
+  find_preinstall
+  find_postinstall
+  check_preinstall
+  check_postinstall
 }
 
 main "$@"
