@@ -48,7 +48,7 @@ function unpack {
 
 
 function bom_search {
-    while IFS=$'\n' read -r bom; do 
+  while IFS=$'\n' read -r bom; do 
     boms+=("${bom}"); 
   done < <(find "${expand_dir}" -name "Bom" -type f)
 }
