@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+# macos-scripts/office-macro-security
+
+# office-macro-security
+#  Disable macro execution in MS Office
+#  Restrict macro access to the system
+
+set -uo pipefail
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### UTILITY FUNCTIONS ###
+# ctrl_c
+# usage
+# has_office
+# restrict_message
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+
+function usage {
+  echo -e "\\n  Disable or restrict macro execution in Office"
+  echo -e "  Usage: ./disable-office-macros {disable | restrict | both | undo}\\n"
+
+  echo "  list      List"
+  echo "  disable   Entirely disable macro execution"
+  echo "  restrict  Disable access to dylibs, system(). popen() & AppleScript"
+  echo "  both      Disable execution & restrict system access"
+  echo "  undo      Revert all to default setting"
+
+  exit 0
+}
+
+
+function has_office {
+
+  if ! defaults read com.microsoft.office >/dev/null 2>&1; then 
+    echo "[] Office not installed on ${HOSTNAME}"
+    exit 1
+  fi 
+}
+
+
+function restrict_message {
+  echo "[] Restricting macro access to system..."
+  echo "[] Disabling ability to use:" 
+  echo "[+] external dylibs"
+  echo "[+] system()"
+  echo "[+] popen()"
+  echo "[+] MacScript4() (AppleScript)"
+  echo "[+] Modify the VB project"
+}
+
+
+### END UTILITY FUNCTIONS ###
+
+function list_preferences {
+
+  # List all values for the affected keys
+
+  for preference_key in "${preference_keys[@]}"; do
+    if key_value=$(defaults read com.microsoft.office "${preference_key}" 2>/dev/null); then
+      echo "${preference_key} ${key_value}"
+    else
+      echo "${preference_key} not explicitly set"
+    fi
+  done
+}
+
+function disable_macros {
+
+  # VisualBasicMacroExecutionState
+  #   Controls whether macros are ever allowed to execute and what 
+  #   the user experience is when opening a file that contains a macro
+  # Office Version(s): 2016 & 2019
+  # Default: DisabledWithWarnings
+  # Other Values: 
+  #   DisabledWithoutWarnings
+  #   EnabledWithoutWarnings
+  defaults write com.microsoft.office VisualBasicMacroExecutionState -string DisabledWithoutWarnings 
+}
+
+function restrict_macro_execution {
+
+  # DisableVisualBasicExternalDylibs
+  #   Controls if macros are allowed to use DECLARE2 to bind symbol name 
+  #   to an external procedure in the local OS
+  # Office Version(s): 2016 & 2019
+  # Default: false
+  # Other Values:
+  #   true
+  defaults write com.microsoft.office DisableVisualBasicExternalDylibs -bool true
+
+  
+  # AllowVisualBasicToBindToSystem
+  #   Controls if macros are allowed to use a DECLARE to bind to the system() OS API
+  #   This API allows macros to execute arbitrary commands
+  # Office Version(s): 2016 & 2019  
+  # Default: true
+  # Other Values:
+  #   false
+  defaults write com.microsoft.office AllowVisualBasicToBindToSystem -bool false
+
+
+  # DisableVisualBasicToBindToPopen
+  #   Controls if macros are allowed to use a DECLARE to bind to the popen() OS API
+  #   This API allows macros to execute arbitrary commands
+  # Office Version(s): 2016 & 2019  
+  # Default: false
+  # Other Values:
+  #   true
+  defaults write com.microsoft.office DisableVisualBasicToBindToPopen -bool true
+  
+  
+  # DisableVisualBasicMacScript
+  #   Controls if macros are allowed to invoke the MacScript4() Visual Basic API
+  #   This API allows macros to execute arbitrary code via AppleScript
+  # Office Version(s): 2016 & 2019  
+  # Default: false
+  # Other Values:
+  #   true
+  defaults write com.microsoft.office DisableVisualBasicMacScript -bool true
+
+
+  # VBAObjectModelIsTrusted
+  #   Controls if macros are allowed to modify the VB project 
+  #   itself through the VBA object model
+  # Office Version(s): 2019
+  # Default: true
+  # Other Values:
+  #   false
+  defaults write com.microsoft.office VBAObjectModelIsTrusted -bool false
+}
+
+function restore_to_defaults {
+  defaults write com.microsoft.office VisualBasicMacroExecutionState -string DisabledWithWarnings
+  defaults write com.microsoft.office DisableVisualBasicExternalDylibs -bool false 
+  defaults write com.microsoft.office AllowVisualBasicToBindToSystem -bool true
+  defaults write com.microsoft.office DisableVisualBasicToBindToPopen -bool false
+  defaults write com.microsoft.office DisableVisualBasicMacScript -bool false
+
+  # Office 2019 only
+  defaults write com.microsoft.office VBAObjectModelIsTrusted -bool true
+}
+
+function main {
+
+  has_office
+
+  declare -r arg=${1:-"usage"}
+  declare -a preference_keys
+  preference_keys=(VisualBasicMacroExecutionState DisableVisualBasicExternalDylibs\
+                  AllowVisualBasicToBindToSystem DisableVisualBasicToBindToPopen\
+                  DisableVisualBasicMacScript VBAObjectModelIsTrusted)
+
+    case "${arg}" in
+
+    usage|help|-h|--help|🤷‍♂️|🤷‍♀️|"¯\_(ツ)_/¯")
+      usage
+      ;;
+
+    list|-l|--list)
+      list_preferences
+      ;;
+
+    disable|-d|--disable)
+      echo "[] Disabling macro execution"
+      disable_macros
+      echo "[+] Disabled"
+      ;;
+
+    restrict|-r|--restrict) 
+      restrict_message
+      restrict_macro_execution
+      ;;
+    
+    both|-b|--both)
+      echo "[] Disabling macro execution"
+      disable_macros
+      echo -e "[+] Disabled\n"
+
+      restrict_message
+      restrict_macro_execution
+      ;;
+      
+    undo|-u|--undo)
+      echo "[] Revert all to default setting"
+      restore_to_defaults
+      echo "[] Done"
+      ;;
+
+    *)
+      usage
+      ;;
+
+  esac
+}
+
+main "$@"
