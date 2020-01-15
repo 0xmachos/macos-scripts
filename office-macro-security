@@ -28,7 +28,7 @@ function ctrl_c {
 
 function usage {
   echo -e "\\n  Disable or restrict macro execution in Office"
-  echo -e "  Usage: ./disable-office-macros {disable | restrict | both | undo}\\n"
+  echo -e "  Usage: ./disable-office-macros {list | disable | restrict | both | undo}\\n"
 
   echo "  list      List"
   echo "  disable   Entirely disable macro execution"
