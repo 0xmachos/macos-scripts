@@ -4,6 +4,7 @@
 # office-macro-security
 #  Disable macro execution in MS Office
 #  Restrict macro access to the system
+#  https://macadmins.software/docs/VBSecurityControls.pdf
 
 set -uo pipefail
 # -u prevent using undefined variables
