@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# macos-scripts/app-expand
+
+set -uo pipefail
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+
+function usage {
+
+  echo -e "\\n Expand Application Bundles (.app)"
+  echo -e "Recursively checks app bundles for Mach-O files"
+  echo "   ./app-expand example.app"
+  
+  exit 0
+}
+
+
+function file_search {
+  while IFS=$'\n' read -r file; do 
+      files+=("${file}"); 
+    done < <(find "${arg}" -type f)
+}
+
+
+function macho_check {
+
+  echo "Mach-O Files: "
+
+  for file in "${files[@]}"; do
+    if file "${file}" | grep -q 'Mach-O'; then
+      macho_files+=("${file}");
+      shasum -a 256 "${file}"
+    fi
+  done
+}
+
+
+function main {
+  declare -a files
+  declare -a macho_files
+
+  arg=${1:-"usage"}
+
+  if [[ "${arg}" =~ ^(usage|help|-h|--help|🤷‍♂️|🤷‍♀️|"¯\_(ツ)_/¯")$ ]]; then
+    usage
+  fi
+
+  file_search
+  macho_check
+}
+
+main "$@"
