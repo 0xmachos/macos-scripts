@@ -35,7 +35,7 @@ function usage {
   echo "  disable   Entirely disable macro execution"
   echo "  restrict  Disable access to dylibs, system(). popen() & AppleScript"
   echo "  both      Disable execution & restrict system access"
-  echo "  undo      Revert all to default setting"
+  echo "  undo      Restore all settings to default value"
 
   exit 0
 }
@@ -193,9 +193,9 @@ function main {
       ;;
       
     undo|-u|--undo)
-      echo "[] Revert all to default setting"
+      echo "[] Restoring default settings"
       restore_to_defaults
-      echo "[] Done"
+      echo "[-] Restored"
       ;;
 
     *)
