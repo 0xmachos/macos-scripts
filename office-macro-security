@@ -53,11 +53,11 @@ function has_office {
 function restrict_message {
   echo "[] Restricting macro access to system..."
   echo "[] Disabling ability to use:" 
-  echo "[+] external dylibs"
-  echo "[+] system()"
-  echo "[+] popen()"
-  echo "[+] MacScript4() (AppleScript)"
-  echo "[+] Modify the VB project"
+  echo "[-] external dylibs"
+  echo "[-] system()"
+  echo "[-] popen()"
+  echo "[-] MacScript4() (AppleScript)"
+  echo "[-] Modify the VB project"
 }
 
 
@@ -175,7 +175,7 @@ function main {
     disable|-d|--disable)
       echo "[] Disabling macro execution"
       disable_macros
-      echo "[+] Disabled"
+      echo "[-] Disabled"
       ;;
 
     restrict|-r|--restrict) 
@@ -186,7 +186,7 @@ function main {
     both|-b|--both)
       echo "[] Disabling macro execution"
       disable_macros
-      echo -e "[+] Disabled\n"
+      echo -e "[-] Disabled\n"
 
       restrict_message
       restrict_macro_execution
