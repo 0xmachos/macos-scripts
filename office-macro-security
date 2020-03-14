@@ -31,7 +31,7 @@ function usage {
   echo -e "\\n  Disable or restrict macro execution in Office"
   echo -e "  Usage: ./disable-office-macros {list | disable | restrict | both | undo}\\n"
 
-  echo "  list      List"
+  echo "  list      List current settings"
   echo "  disable   Entirely disable macro execution"
   echo "  restrict  Disable access to dylibs, system(). popen() & AppleScript"
   echo "  both      Disable execution & restrict system access"
