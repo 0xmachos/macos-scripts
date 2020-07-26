@@ -147,7 +147,7 @@ function main {
 
   trap ctrl_c SIGINT
   # Detect and react to the user hitting CTRL + C
-  
+  declare -a functions
   functions=(timestamp version_info is_admin hardware_info time_stats filesystem_info security_info \
             full_disk_access_check launchd_stuff third_party_kexts)
 
