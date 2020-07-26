@@ -47,7 +47,7 @@ function has_office {
   #     have been launched before
 
   if ! defaults read com.microsoft.office >/dev/null 2>&1; then 
-    echo "[] Office not installed on ${HOSTNAME}"
+    echo "[] Office not installed on ${HOST}"
     exit 1
   fi 
 }
