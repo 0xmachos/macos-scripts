@@ -51,7 +51,7 @@ function version_info {
 function is_admin {
 
   if groups | grep -q 'admin'; then
-    echo "Accpount Type: Administrator"
+    echo "Account Type: Administrator"
   else
     echo "Account Type: Standard User"
   fi
