@@ -104,7 +104,7 @@ function security_info {
   
   echo "Gatekeeper Status: ${gatekeeper_status}"
   echo "Kernel Extension User Consent: ${kext_loading_stats}"
-  echo "System Integrity Protection status: ${sip_status}"
+  echo "System Integrity Protection: ${sip_status}"
   echo "FileVault status: ${filevault_status}"
 
   # if system_profiler SPiBridgeDataType | grep 'Model Name:' | grep -q 'T2'; then 
