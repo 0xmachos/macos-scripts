@@ -20,9 +20,9 @@ function check_shellcheck {
   #   Check if shellcheck is installed
 
   if ! [ -x "$(command -v shellcheck)" ]; then
-    echo -e "[FAIL] shellcheck not installed"
-    echo -e "[INFO] macOS: brew install shellcheck"
-    echo -e "[INFO] Linux: apt install shellcheck"
+    echo "[FAIL] shellcheck not installed"
+    echo "[INFO] macOS: brew install shellcheck"
+    echo "[INFO] Linux: apt install shellcheck"
     exit 1
   fi
 }
@@ -99,11 +99,11 @@ function main {
 
   if [[ ${#ERRORS[@]} -eq 0 ]]; then
     # If ERRORS empty then 
-    echo -e "[PASS] No errors, hooray"
+    echo "[PASS] No errors, hooray"
     exit 0
   else
     # If ERRORS not empty, print the names of files which failed
-    echo -e "[FAIL] These files failed linting: ${ERRORS[*]}"
+    echo "[FAIL] These files failed linting: ${ERRORS[*]}"
     exit 1
   fi
 }
