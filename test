@@ -77,9 +77,9 @@ function analyse {
       # Run shellcheck on the file
       # Always uses bash mode as bittersweet now has a zsh shebang
       # Shelllcheck doesn't support zsh.
-      echo -e "[PASS] $(basename ${shell_file})"
+      echo "[PASS] $(basename "${shell_file}")"
     else
-      echo -e "[FAIL] $(basename ${shell_file})"
+      echo "[FAIL] $(basename "${shell_file}")"
       ERRORS+=("${shell_file}")
       # If shellcheck fails add failing file name to array
     fi
