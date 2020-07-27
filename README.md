@@ -1,7 +1,7 @@
 # macos-scripts
 Various scripts for macOS tasks
 
-[![Build Status](https://travis-ci.com/0xmachos/macos-scripts.svg?branch=master)](https://travis-ci.com/0xmachos/macos-scripts)
+![Shellcheck](https://github.com/0xmachos/macos-scripts/workflows/Shellcheck/badge.svg)
 
 ### `debug`
 - Print some debug info about the current system
