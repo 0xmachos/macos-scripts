@@ -2,85 +2,110 @@
 # macos-scripts/test
 
 # test
-# 	Find shell scripts then run shellcheck 
-
+#   Find shell scripts and run shellcheck on them
+#   Adapted from jessfraz/dotfiles/bin/test.sh
+#   https://github.com/jessfraz/dotfiles/blob/master/test.sh
 
 set -euo pipefail
 # -e exit if any command returns non-zero status code
 # -u prevent using undefined variables
 # -o pipefail force pipelines to fail on first non-zero status code
 
-
-FAIL="\\033[1;31mFAIL\\033[0m"
-INFO="\\033[1;36mINFO\\033[0m"
-PASS="\\033[1;32mPASS\\033[0m"
+/usr/bin/tput sgr0; 
+# reset colors
 
 
 function check_shellcheck {
+  # check_shellcheck
+  #   Check if shellcheck is installed
 
-	if ! [ -x "$(command -v shellcheck)" ]; then 
-		echo -e "[${FAIL}] shellcheck not installed"
-		echo -e "[${INFO}] macOS: brew install shellcheck"
-		echo -e "[${INFO}] Linux: apt install shellcheck"
-		exit 1
-	fi
+  if ! [ -x "$(command -v shellcheck)" ]; then
+    echo -e "[FAIL] shellcheck not installed"
+    echo -e "[INFO] macOS: brew install shellcheck"
+    echo -e "[INFO] Linux: apt install shellcheck"
+    exit 1
+  fi
 }
 
 
-function lint_shell_files {
+function find_files {
+  # find_files
+  #   Find all regular files in source directory
+  
+  while IFS=$'\n' read -r file; do 
+    FILES+=("${file}"); 
+  done < <(/usr/bin/find . -maxdepth 1 -type f \
+            -not -iwholename '*.git*'   \
+            | /usr/bin/sort -u)
+}
 
-	for f in $(find . -type f -not -iwholename '*.git*' \
-				-not -iwholename '*venv*' \
-				| sort -u); do
-		# Find all regular files in source directory
 
-		if file "${f}" | grep --quiet "shell" ; then
-			# Find shell files
-			
-			if shellcheck "${f}" ; then
-				# Run shellcheck on the file
-				echo -e "[${PASS}] Sucessfully linted ${f}"
-			else
-				echo -e "[${FAIL}] Failed to lint ${f}"
-				ERRORS+=("${f}")
-				# If shellcheck fails add failing file name to array
-			fi
-		
-		elif file "${f}" | grep --quiet "bash" ; then
-			# Find shell files
-			# Running file on a script with the shebang "#!/usr/bin/env ..." returns
-			# "a /usr/bin/env bash script, ASCII text executable" rather than
-			# "Bourne-Again shell script, ASCII text executable"
-			
-			if shellcheck "${f}" ; then
-				# Run shellcheck on the file
-				echo -e "[${PASS}] Sucessfully linted ${f}"
-			else
-				echo -e "[${FAIL}] Failed to lint ${f}"
-				ERRORS+=("${f}")
-				# If shellcheck fails add failing file name to array
-			fi
-		fi
-	done
+function analyse_shell_scripts { 
+  # analyse_shell_scripts
+  #   Iterate over $FILES to find bash and zsh scripts
+  #   Call shellcheck on them via analyse function
+  
+  for file in "${FILES[@]}"; do
+    if /usr/bin/file "${file}" | /usr/bin/grep --quiet "shell" || \
+       /usr/bin/file "${file}" | /usr/bin/grep --quiet "bash" ; then
+      # Find bash scripts
+      # Running file on a script with the shebang "#!/usr/bin/env bash" returns
+      #   "a /usr/bin/env bash script, ASCII text executable"
+      # Versus a script with the shebang "#!/bin/bash" which returns
+      #   "Bourne-Again shell script, ASCII text executable"
+      analyse "${file}" 
+
+    elif /usr/bin/file "${file}" | /usr/bin/grep --quiet "zsh"; then
+      # Find zsh scripts
+      # Running file on a script with shebang "#!/usr/bin/env zsh" returns
+      #   "a /usr/bin/env zsh script text executable"
+      analyse "${file}"
+    fi
+  done
+}
+
+
+function analyse {
+  # analyse
+  #   Wrapper for shellcheck to handle errors
+  #   Always invokes shellcheck in bash mode
+  #     as shellcheck does not support zsh
+
+  local shell_file=${1:?shell_file not passed to lint_shell_file}
+
+  if shellcheck --shell=bash "${shell_file}" ; then
+      # Run shellcheck on the file
+      # Always uses bash mode as bittersweet now has a zsh shebang
+      # Shelllcheck doesn't support zsh.
+      echo -e "[PASS] $(basename ${shell_file})"
+    else
+      echo -e "[FAIL] $(basename ${shell_file})"
+      ERRORS+=("${shell_file}")
+      # If shellcheck fails add failing file name to array
+    fi
 }
 
 
 function main {
 
-	ERRORS=()
+  check_shellcheck
 
-	check_shellcheck
-	lint_shell_files
+  declare -a ERRORS
+  declare -a FILES
 
-	if [ ${#ERRORS[@]} -eq 0 ]; then
-		# If ERRORS empty then 
-		echo -e "[${PASS}] No errors, hooray"
-		exit 0
-	else
-		# If errors print the names of files which failed
-		echo -e "[${FAIL}] These files failed linting: ${ERRORS[*]}"
-		exit 1
-	fi
+  find_files
+  analyse_shell_scripts
+
+
+  if [[ ${#ERRORS[@]} -eq 0 ]]; then
+    # If ERRORS empty then 
+    echo -e "[PASS] No errors, hooray"
+    exit 0
+  else
+    # If ERRORS not empty, print the names of files which failed
+    echo -e "[FAIL] These files failed linting: ${ERRORS[*]}"
+    exit 1
+  fi
 }
 
 main "$@"
