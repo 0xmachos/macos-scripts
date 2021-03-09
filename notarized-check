@@ -3,6 +3,7 @@
 
 # notarized-check
 #   Check if Developer ID apps are notarized
+#   Check if notarised apps have a stapled notarized ticket
 #   Print some basic stats
 #   Runtime roughly ~30 seconds, depending on number of apps
 
@@ -76,24 +77,46 @@ function main {
   declare -a apps
   declare -a developer_id_apps
   declare -i num_notarized_apps=0
+  declare -i num_notarized_apps_with_tickets=0
 
   xcode_check
   get_applications
   get_developer_id_applications
 
   for app in "${developer_id_apps[@]}"; do
+
+  # Iterate over all apps signed with a Developer ID certificate
+  # Check if they are notarised, if so check if they have a notarisation
+  #   ticket stapled to them
+  # See Howard Oakley's (@howardnoakley) post:
+  #   https://eclecticlight.co/2019/05/31/can-you-tell-whether-code-has-been-notarized/
+
+  if spctl -a -t exec "${app}" >/dev/null 2>&1; then
+    app_notarised=true
+    num_notarized_apps=$((num_notarized_apps+1))
     
-    if spctl -a -t exec "${app}" >/dev/null 2>&1; then
-      echo "$(basename "${app}") ${GREEN}is notarized${RESET}"
-      num_notarized_apps=$((num_notarized_apps+1)) 
-    
+    if /usr/bin/stapler validate "${app}" >/dev/null 2>&1; then
+      app_stapled=true
+      num_notarized_apps_with_tickets=$((num_notarized_apps_with_tickets+1))
     else
-      echo "$(basename "${app}") ${RED}not notarized${RESET}"
+      app_stapled=false
     fi
-  done
+  else
+    app_notarised=false     
+  fi
+
+  if "${app_notarised}" && "${app_stapled}"; then
+    echo "$(basename "${app}") is ${GREEN}notarized${RESET} & ${GREEN}has ticket${RESET}"
+  elif "${app_notarised}" && ! "${app_stapled}"; then
+    echo "$(basename "${app}") is ${GREEN}notarized${RESET} & ${RED}doesn't have ticket${RESET}"
+  else
+    echo "$(basename "${app}") is ${RED}not notarized${RESET}"
+  fi
+done
 
   echo
   echo "${num_notarized_apps}/${#developer_id_apps} Developer ID Apps notarized"
+  echo "${num_notarized_apps_with_tickets}/${num_notarized_apps} Notarised apps with tickets"
 }
 
 main "$@"
