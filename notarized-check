@@ -59,6 +59,7 @@ function get_developer_id_applications {
     # Skip xcode because it takes ages to run codesign on it
     
     codesign_output="$(codesign -vv --verify --display "${app}" 2>&1)"
+    # codesign sends all its output to stderr, redirect to stdout
     
     if echo "${codesign_output}" | grep -q "Authority=Developer ID Certification Authority"; then
       developer_id_apps+=("${app}");
