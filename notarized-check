@@ -35,6 +35,7 @@ function xcode_check {
 
   if ! xcode-select -p >/dev/null 2>&1; then 
     echo "Can't check Notarisation status - Xcode or Xcode Command Line Tools not installed"
+    exit 1
   fi
 }
 
