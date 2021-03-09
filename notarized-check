@@ -8,7 +8,7 @@
 
 set -uo pipefail
 # -o pipefail force pipelines to fail on first non-zero status code
-
+# -u prevent using undefined variables
 
 IFS=$'\n\t'
 # Set Internal Field Separator to newlines and tabs
