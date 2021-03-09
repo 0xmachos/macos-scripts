@@ -76,15 +76,12 @@ function main {
   declare -a apps
   declare -a developer_id_apps
   declare -i num_notarized_apps=0
-  declare -i num_developer_id_apps=0
 
   xcode_check
   get_applications
   get_developer_id_applications
 
   for app in "${developer_id_apps[@]}"; do
-
-    num_developer_id_apps=$((num_developer_id_apps+1))
     
     if /usr/bin/stapler validate "${app}" >/dev/null 2>&1; then
       echo "$(basename "${app}") ${GREEN}is notarized${RESET}"
@@ -96,8 +93,7 @@ function main {
   done
 
   echo
-  echo "${num_notarized_apps}/${num_developer_id_apps} Developer ID Apps notarized"
-
+  echo "${num_notarized_apps}/${#developer_id_apps} Developer ID Apps notarized"
 }
 
 main "$@"
