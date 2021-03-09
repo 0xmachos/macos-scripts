@@ -1,0 +1,101 @@
+#!/usr/bin/env zsh
+# macos-scripts/notarized-check
+
+# notarized-check
+#   Check if Developer ID apps are notarized
+#   Print some basic stats
+#   Runtime roughly ~30 seconds, depending on number of apps
+
+set -uo pipefail
+# -o pipefail force pipelines to fail on first non-zero status code
+
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+readonly RESET=$(tput sgr0)
+
+readonly RED=$(tput setaf 1)
+readonly GREEN=$(tput setaf 64)
+### END Colours ###
+
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+function xcode_check {
+
+  if ! xcode-select -p >/dev/null 2>&1; then 
+    echo "Can't check Notarisation status - Xcode or Xcode Command Line Tools not installed"
+  fi
+}
+
+
+function get_applications {
+  while IFS=$'\n' read -r app; do 
+    apps+=("${app}"); 
+  done < <(system_profiler SPApplicationsDataType \
+            | grep "Location: " \
+            | awk -F ': ' '{print $2}')
+}
+
+
+function get_developer_id_applications {
+  
+  for app in "${apps[@]}"; do
+    
+    if [[ "${app}" =~ /Applications/Xcode.app/ ]]; then
+      continue
+    fi
+    # Skip xcode because it takes ages to run codesign on it
+    
+    codesign_output="$(codesign -vv --verify --display "${app}" 2>&1)"
+    
+    if echo "${codesign_output}" | grep -q "Authority=Developer ID Certification Authority"; then
+      developer_id_apps+=("${app}");
+    fi 
+  done
+}
+
+
+function main {
+
+  trap ctrl_c SIGINT
+  # Detect and react to the user hitting CTRL + C
+
+  declare -a apps
+  declare -a developer_id_apps
+  declare -i num_notarized_apps=0
+  declare -i num_developer_id_apps=0
+
+  xcode_check
+  get_applications
+  get_developer_id_applications
+
+  for app in "${developer_id_apps[@]}"; do
+
+    num_developer_id_apps=$((num_developer_id_apps+1))
+    
+    if /usr/bin/stapler validate "${app}" >/dev/null 2>&1; then
+      echo "$(basename "${app}") ${GREEN}is notarized${RESET}"
+      num_notarized_apps=$((num_notarized_apps+1)) 
+    
+    else
+      echo "$(basename "${app}") ${RED}not notarized${RESET}"
+    fi
+  done
+
+  echo
+  echo "${num_notarized_apps}/${num_developer_id_apps} Developer ID Apps notarized"
+
+}
+
+main "$@"
