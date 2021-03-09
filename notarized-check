@@ -83,7 +83,7 @@ function main {
 
   for app in "${developer_id_apps[@]}"; do
     
-    if /usr/bin/stapler validate "${app}" >/dev/null 2>&1; then
+    if spctl -a -t exec "${app}" >/dev/null 2>&1; then
       echo "$(basename "${app}") ${GREEN}is notarized${RESET}"
       num_notarized_apps=$((num_notarized_apps+1)) 
     
