@@ -56,11 +56,15 @@ function get_developer_id_applications {
   
   for app in "${apps[@]}"; do
     
-    if [[ "${app}" =~ /Applications/Xcode.app/ ]]; then
+    if [[ "${app}" =~ /System/ ]]; then
       continue
+      # Skip everything is /System/Applications/ and /System/Library/
+      #   since they can't be third party apps
+    elif [[ "${app}" =~ /Applications/Xcode.app/ ]]; then
+      continue
+      # Skip xcode because it takes ages to run codesign on it
     fi
-    # Skip xcode because it takes ages to run codesign on it
-    
+
     codesign_output="$(codesign -vv --verify --display "${app}" 2>&1)"
     # codesign sends all its output to stderr, redirect to stdout
     
