@@ -3,7 +3,7 @@
 
 # notarized-check
 #   Check if Developer ID apps are notarized
-#   Check if notarised apps have a stapled notarized ticket
+#   Check if notarised apps have a stapled notarization ticket
 #   Print some basic stats
 #   Runtime roughly ~30 seconds, depending on number of apps
 
