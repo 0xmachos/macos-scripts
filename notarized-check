@@ -35,7 +35,9 @@ function ctrl_c {
 function xcode_check {
 
   if ! xcode-select -p >/dev/null 2>&1; then 
-    echo "Can't check Notarisation status - Xcode or Xcode Command Line Tools not installed"
+    echo "[❌] Can't check if notarisation ticket is stapled to notarised apps via stapler"
+    echo "       Xcode or Xcode Command Line Tools (CLT) not installed"
+    echo "[⚠️] Install Xcode CLT via: xcode-select --install"
     exit 1
   fi
 }
