@@ -156,7 +156,7 @@ function main {
   declare -r application_path=${2:-null}
   # Set application_path to "null" if argv[2] is null or unset
   # This is a probably a dirty hack that needs a proper solution
-  # Should be able to use paramater expansion but bug when using ${2+} which 
+  # Should be able to use parameter expansion but bug when using ${2+} which 
   #   causes application_path to be set to empty even when argv[2] 
   #   is not empty. i.e. with ${2+} ./c0design verify aaa thinks argv[2] empt
 
