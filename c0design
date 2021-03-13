@@ -34,7 +34,8 @@ function usage {
   echo "  verify      Check codesigning and notarisation of application at \$application_path"
   echo "              Equivilant of codesign --verify --deep --strict"
   echo "  thirdparty  Check codesigning and notarisation of all non system applications"
-
+  echo
+  
   exit 0
 }
 
