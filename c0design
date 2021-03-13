@@ -1,0 +1,201 @@
+#!/usr/bin/env zsh
+# macos-scripts/c0design
+
+# c0design
+#   Wrapper for codesign, spctl & stapler
+
+set -uo pipefail
+# -o pipefail force pipelines to fail on first non-zero status code
+# -u prevent using undefined variables
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+readonly RESET=$(tput sgr0)
+
+readonly RED=$(tput setaf 1)
+readonly GREEN=$(tput setaf 64)
+### END Colours ###
+
+
+function usage {
+  echo 
+  echo "  Wrapper for codesign, spctl & stapler"
+  echo "  Usage: ./c0design { usage | list | verify \$application_path}"
+  echo
+
+  echo "  list        List all non system applications (excludes Xcode & Safari)"
+  echo "  verify      Check codesigning and notarisation of application at \$application_path"
+  echo "              Equivilant of codesign --verify --deep --strict"
+  echo "  thirdparty  Check codesigning and notarisation of all non system applications"
+
+  exit 0
+}
+
+
+### Utility Functions ###
+
+function get_applications {
+  
+  while IFS=$'\n' read -r app; do
+   
+    if [[ "${app}" =~ /System/ ]]; then
+      continue
+      # Skip everything is /System/Applications/ and /System/Library/
+      #   since they can't be third party apps
+    elif [[ "${app}" =~ Xcode.app ]]; then
+      continue
+      # Skip Xcode because it takes ages to run codesign on it
+    elif [[ "${app}" =~ Safari.app ]]; then
+      continue
+      # Skip Safari because it is a system application
+    fi
+    
+    apps+=("${app}");
+    # e.g. Adds "/Applications/1Password 7.app" to apps array
+
+  done < <(system_profiler SPApplicationsDataType \
+            | grep "Location: " \
+            | awk -F ': ' '{print $2}')
+}
+
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+
+function verify_app_signature {
+
+  declare -r application_path=${1:?application_path not passed to verify_app_signature}
+
+  if codesign_output="$(codesign --verify --deep --strict "${application_path}" 2>&1)"; then
+    return 0
+  elif [[ "${codesign_output}" =~ No\ such\ file\ or\ directory ]]; then
+    echo "${application_path}: No such file or directory"
+    exit 1
+  else
+    # echo "$(/usr/bin/basename "${application_path}") ${RED}not properly verified${RESET}"
+    return 1
+  fi
+}
+
+
+function check_notarsied {
+
+  declare -r application_path=${1:?application_path not passed to check_notarsied}
+
+  if spctl --assess --type exec "${application_path}" >/dev/null 2>&1; then
+    # Check if system policy allows execution of this code aka Notarised
+    return 0 
+  else
+    return 1
+  fi
+}
+
+
+function check_stapled_notarisation_ticket {
+
+  declare -r application_path=${1:?application_path not passed to check_stapled_notarisation_ticket}
+
+  if /usr/bin/stapler validate "${application_path}" >/dev/null 2>&1; then
+    # Check if app has a notarisation ticket stapled to it
+    # See Howard Oakley's (@howardnoakley) post:
+    #   https://eclecticlight.co/2019/05/31/can-you-tell-whether-code-has-been-notarized/
+    return 0
+  else
+    return 1
+  fi
+}
+
+
+function verify {
+
+  declare -r application_path=${1:?application_path not passed to verify}
+
+  if verify_app_signature "${application_path}"; then
+  
+  if check_notarsied "${application_path}"; then
+
+    if check_stapled_notarisation_ticket "${application_path}"; then
+      echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised (stapled ticket)${RESET}"
+      # Wording from man page is "all codes verified properly as requested"
+    else
+       echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised ${RED}(no stapled ticket)${RESET}"
+    fi
+ 
+  else
+    echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed and properly verified${RESET} but ${RED}not notarised${RESET}"
+  fi
+
+else
+  codesign_error_message=$(echo "${codesign_output}" | head -n 1 |awk -F ':' '{print $2}')
+  # head -n 1 removes the "In architecture" output which indicates in a Fat/Universal binary which
+  #   specific binary has failed code signing checks. 
+  # Output is either x86_64 or arm64e
+  # Currently don't care about which binary has fialed code signing checks just that one or the other has
+  echo "$(basename "${application_path}"):${RED}${codesign_error_message}${RESET}"
+  return 1
+fi
+}
+
+
+function main {
+
+  trap ctrl_c SIGINT
+  # Detect and react to the user hitting CTRL + C
+
+  declare -r arg=${1:-"usage"}
+  declare -r application_path=${2:-null}
+  # Set application_path to "null" if argv[2] is null or unset
+  # This is a probably a dirty hack that needs a proper solution
+  # Should be able to use paramater expansion but bug when using ${2+} which 
+  #   causes application_path to be set to empty even when argv[2] 
+  #   is not empty. i.e. with ${2+} ./c0design verify aaa thinks argv[2] empt
+
+  declare -a apps
+
+  case "${arg}" in
+
+    usage|help|-h|--help|🤷‍♂️|🤷‍♀️|"¯\_(ツ)_/¯")
+      usage
+      ;;
+
+    list|-l|--list)
+      get_applications
+
+      for app in "${apps[@]}"; do
+        echo "${app}"
+      done
+      ;;
+
+    verify|-v|--verify)
+      if [[ "${application_path}" == "null" ]]; then
+        usage
+      fi
+      verify "${application_path}"
+      ;;
+
+    thirdparty|-tp|--third-party)
+      get_applications
+
+      for app in "${apps[@]}"; do
+        verify "${app}"
+      done 
+      ;;
+
+    *)
+      usage
+      ;;
+  esac
+
+}
+
+main "$@"
