@@ -27,7 +27,7 @@ readonly GREEN=$(tput setaf 64)
 function usage {
   echo 
   echo "  Wrapper for codesign, spctl & stapler"
-  echo "  Usage: ./c0design { usage | list | verify \$application_path}"
+  echo "  Usage: ./c0design { usage | list | verify \$application_path | thirdparty}"
   echo
 
   echo "  list        List all non system applications (excludes Xcode & Safari)"
