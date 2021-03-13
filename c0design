@@ -121,29 +121,27 @@ function verify {
   declare -r application_path=${1:?application_path not passed to verify}
 
   if verify_app_signature "${application_path}"; then
-  
-  if check_notarsied "${application_path}"; then
-
-    if check_stapled_notarisation_ticket "${application_path}"; then
-      echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised (stapled ticket)${RESET}"
-      # Wording from man page is "all codes verified properly as requested"
+    
+    if check_notarsied "${application_path}"; then
+      
+      if check_stapled_notarisation_ticket "${application_path}"; then
+        echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised (stapled ticket)${RESET}"
+        # Wording from man page is "all codes verified properly as requested"
+      else
+        echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised ${RED}(no stapled ticket)${RESET}"
+      fi
     else
-       echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised ${RED}(no stapled ticket)${RESET}"
+      echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed and properly verified${RESET} but ${RED}not notarised${RESET}"
     fi
- 
   else
-    echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed and properly verified${RESET} but ${RED}not notarised${RESET}"
+    codesign_error_message=$(echo "${codesign_output}" | head -n 1 |awk -F ':' '{print $2}')
+    # head -n 1 removes the "In architecture" output which indicates in a Fat/Universal binary which
+    #   specific binary has failed code signing checks. 
+    # Output is either x86_64 or arm64e
+    # Currently don't care about which binary has fialed code signing checks just that one or the other has
+    echo "$(basename "${application_path}"):${RED}${codesign_error_message}${RESET}"
+    return 1
   fi
-
-else
-  codesign_error_message=$(echo "${codesign_output}" | head -n 1 |awk -F ':' '{print $2}')
-  # head -n 1 removes the "In architecture" output which indicates in a Fat/Universal binary which
-  #   specific binary has failed code signing checks. 
-  # Output is either x86_64 or arm64e
-  # Currently don't care about which binary has fialed code signing checks just that one or the other has
-  echo "$(basename "${application_path}"):${RED}${codesign_error_message}${RESET}"
-  return 1
-fi
 }
 
 
