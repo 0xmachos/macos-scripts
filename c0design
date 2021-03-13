@@ -47,7 +47,7 @@ function get_applications {
    
     if [[ "${app}" =~ /System/ ]]; then
       continue
-      # Skip everything is /System/Applications/ and /System/Library/
+      # Skip everything in /System/Applications/ and /System/Library/
       #   since they can't be third party apps
     elif [[ "${app}" =~ Xcode.app ]]; then
       continue
