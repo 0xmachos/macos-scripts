@@ -120,6 +120,12 @@ function verify_app_signature {
 
 
 function check_notarsied {
+  # check_notarsied
+  #   Check if app is allowed to be executed under current system policy
+  #   On systems with default settings this will check if app is notarised
+  #   If SecAssessment has been disabled spctl notarised checks will fail
+  #   If system has SecAssessment disabled (e.g. spctl --master-disable has been executed)
+  #     you can execute codesign --test-requirement="=notarized" --verify to check notarisation
 
   declare -r application_path=${1:?application_path not passed to check_notarsied}
 
