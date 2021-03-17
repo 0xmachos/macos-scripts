@@ -195,8 +195,14 @@ function verify {
     if check_notarsied "${application_path}"; then
       
       if check_stapled_notarisation_ticket "${application_path}"; then
-        echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised (stapled ticket)${RESET}"
-        # Wording from man page is "all codes verified properly as requested"
+        
+        if check_if_app_from_app_store "${application_path}"; then
+          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (App Store)"
+          # Wording from man page is "all codes verified properly as requested"
+        else
+          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (Developer ID)"
+        fi
+      
       else
         
         if check_if_app_from_app_store "${application_path}"; then
