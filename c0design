@@ -218,7 +218,7 @@ function verify {
     #   specific binary has failed code signing checks. 
     # Output is either x86_64 or arm64e
     # Currently don't care about which binary has fialed code signing checks just that one or the other has
-    echo "$(basename "${application_path}"):${RED}${codesign_error_message}${RESET}"
+    echo "$(basename "${application_path}") ${RED}${codesign_error_message}${RESET}"
     return 1
   fi
 }
