@@ -180,6 +180,13 @@ function check_if_app_from_app_store {
 
 
 function verify {
+  # verify
+  #   Use the above helper functions to check application
+  #     1. Properly signed
+  #     2. Notarised
+  #     3. Locally stapled notarisation ticket
+  #     4. From Mac App Store or Developer ID App
+  #   echo to command line based on above criteria
 
   declare -r application_path=${1:?application_path not passed to verify}
 
