@@ -166,7 +166,7 @@ function check_if_app_from_app_store {
   #   Could also use 
   #     mdls "${application_path}" -name kMDItemAppStoreHasReceipt
 
-  declare -r application_path=${1:?application_path not passed to check_stapled_notarisation_ticket}
+  declare -r application_path=${1:?application_path not passed to check_if_app_from_app_store}
   codesign_output=$(/usr/bin/codesign --display --verbose=2 "${application_path}" 2>&1)
 
   if echo "${codesign_output}" | grep -q "Authority=Apple Mac OS Application Signing"; then
