@@ -45,6 +45,13 @@ function usage {
 
 
 ### Utility Functions ###
+# ctrl_c
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
 
 function get_applications {
   
@@ -70,11 +77,6 @@ function get_applications {
             | awk -F ': ' '{print $2}')
 }
 
-
-function ctrl_c {
-  echo -e "\\n[❌] ${USER} has chosen to quit!"
-  exit 1
-}
 
 
 function verify_app_signature {
