@@ -101,16 +101,19 @@ function get_applications {
 
 
 function verify_app_signature {
+  # verify_app_signature
+  #   Verify that app at $application_path is correctly code signed
+  #   Save codesign output in $codesign_output for priting errors
 
   declare -r application_path=${1:?application_path not passed to verify_app_signature}
 
   if codesign_output="$(codesign --verify --deep --strict "${application_path}" 2>&1)"; then
+    # codesign sends all output to stderr, redirect it to std out
     return 0
   elif [[ "${codesign_output}" =~ No\ such\ file\ or\ directory ]]; then
     echo "${application_path}: No such file or directory"
     exit 1
   else
-    # echo "$(/usr/bin/basename "${application_path}") ${RED}not properly verified${RESET}"
     return 1
   fi
 }
