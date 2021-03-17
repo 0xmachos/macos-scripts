@@ -53,6 +53,24 @@ function ctrl_c {
 }
 
 
+function check_spctl_status {
+  # spctl_status
+  #   Check if SecAssessment subsystem is enabled
+  #   If it is not enabled all notarisation checks will fail
+  #   If spctl --master-disable has been executed spctl --status 
+  #     will return 1
+
+  if spctl --status >/dev/null 2&>1; then
+    return 0
+  else
+    echo "[⚠️ ] SecAssessment subsystem has been disabled, ${RED}all notarisation checks will fail${RESET}"
+    return 1
+  fi
+}
+
+### END Utility Functions ###
+
+
 function get_applications {
   
   while IFS=$'\n' read -r app; do
@@ -184,6 +202,8 @@ function main {
       ;;
 
     verify|-v|--verify)
+      check_spctl_status
+      
       if [[ "${application_path}" == "null" ]]; then
         usage
       fi
@@ -191,6 +211,8 @@ function main {
       ;;
 
     thirdparty|-tp|--third-party)
+      check_spctl_status
+      
       get_applications
 
       for app in "${apps[@]}"; do
