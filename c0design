@@ -158,6 +158,26 @@ function check_stapled_notarisation_ticket {
   fi
 }
 
+function check_if_app_from_app_store {
+  # check_if_app_from_app_store
+  #   Checks if app is from Mac App Store
+  #     or from outside App Store based on intermediate certificate used
+  #     to sign the leaf certificate
+  #   Could also use 
+  #     mdls "${application_path}" -name kMDItemAppStoreHasReceipt
+
+  declare -r application_path=${1:?application_path not passed to check_stapled_notarisation_ticket}
+  codesign_output=$(codesign --display --verbose=2 "${application_path}" 2>&1)
+
+  if echo "${codesign_output}" | grep -q "Authority=Apple Mac OS Application Signing"; then
+    return 0
+    # echo "Mac App Store"
+  elif echo "${codesign_output}" | grep -q "Authority=Developer ID Certification Authority"; then
+    return 1
+    # echo "Developer App"
+  fi
+}
+
 
 function verify {
 
@@ -171,7 +191,14 @@ function verify {
         echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised (stapled ticket)${RESET}"
         # Wording from man page is "all codes verified properly as requested"
       else
-        echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised ${RED}(no stapled ticket)${RESET}"
+        
+        if check_if_app_from_app_store "${application_path}"; then
+          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (App Store App) ${YELLOW}(no stapled ticket)${RESET}"
+          # Apps from the AppStore never have stapled tickets
+        else
+          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (Developer ID App) ${YELLOW}(no stapled ticket)${RESET}"
+          # Developer ID apps can have stapled tickets, not a requiremnt though
+        fi
       fi
     
     else
