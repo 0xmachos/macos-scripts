@@ -23,6 +23,7 @@ tput sgr0;
 readonly RESET=$(tput sgr0)
 
 readonly RED=$(tput setaf 1)
+readonly YELLOW=$(tput setaf 3)
 readonly GREEN=$(tput setaf 64)
 ### END Colours ###
 
