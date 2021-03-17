@@ -139,13 +139,19 @@ function check_notarsied {
 
 
 function check_stapled_notarisation_ticket {
+  # check_stapled_notarisation_ticket
+  #   Check if the application at $application_path has a locally stapled
+  #     notarisation ticket
+  #   Not having a locally staped ticket is NOT a security issue, Apple can
+  #     hold the ticket on their servers with macOS reaching out to Apple to
+  #     validate the app/ticket.
+  #   See  Howard Oakley's (@howardnoakley) tweet:
+  #     https://twitter.com/howardnoakley/status/1369328846466650120
 
   declare -r application_path=${1:?application_path not passed to check_stapled_notarisation_ticket}
 
   if /usr/bin/stapler validate "${application_path}" >/dev/null 2>&1; then
     # Check if app has a notarisation ticket stapled to it
-    # See Howard Oakley's (@howardnoakley) post:
-    #   https://eclecticlight.co/2019/05/31/can-you-tell-whether-code-has-been-notarized/
     return 0
   else
     return 1
