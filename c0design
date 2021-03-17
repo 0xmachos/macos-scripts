@@ -3,6 +3,9 @@
 
 # c0design
 #   Wrapper for codesign, spctl & stapler
+#   See Howard Oakley's (@howardnoakley) work:
+#     https://eclecticlight.co/2019/05/31/can-you-tell-whether-code-has-been-notarized/
+#     https://eclecticlight.co/2020/10/30/code-signatures-2-how-to-check-them/
 
 set -uo pipefail
 # -o pipefail force pipelines to fail on first non-zero status code
