@@ -206,10 +206,10 @@ function verify {
       else
         
         if check_if_app_from_app_store "${application_path}"; then
-          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (App Store App) ${YELLOW}(no stapled ticket)${RESET}"
+          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (App Store)"
           # Apps from the AppStore never have stapled tickets
         else
-          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (Developer ID App) ${YELLOW}(no stapled ticket)${RESET}"
+          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (Developer ID)"
           # Developer ID apps can have stapled tickets, not a requiremnt though
         fi
       fi
