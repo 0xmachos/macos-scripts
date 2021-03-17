@@ -60,7 +60,7 @@ function check_spctl_status {
   #   If spctl --master-disable has been executed spctl --status 
   #     will return 1
 
-  if spctl --status >/dev/null 2&>1; then
+  if /usr/sbin/spctl --status >/dev/null 2&>1; then
     return 0
   else
     echo "[⚠️ ] SecAssessment subsystem has been disabled, ${RED}all notarisation checks will fail${RESET}"
@@ -107,7 +107,7 @@ function verify_app_signature {
 
   declare -r application_path=${1:?application_path not passed to verify_app_signature}
 
-  if codesign_output="$(codesign --verify --deep --strict "${application_path}" 2>&1)"; then
+  if codesign_output="$(/usr/bin/codesign --verify --deep --strict "${application_path}" 2>&1)"; then
     # codesign sends all output to stderr, redirect it to std out
     return 0
   elif [[ "${codesign_output}" =~ No\ such\ file\ or\ directory ]]; then
@@ -129,7 +129,7 @@ function check_notarsied {
 
   declare -r application_path=${1:?application_path not passed to check_notarsied}
 
-  if spctl --assess --type exec "${application_path}" >/dev/null 2>&1; then
+  if /usr/sbin/spctl --assess --type exec "${application_path}" >/dev/null 2>&1; then
     # Check if system policy allows execution of this code aka Notarised
     return 0 
   else
@@ -167,7 +167,7 @@ function check_if_app_from_app_store {
   #     mdls "${application_path}" -name kMDItemAppStoreHasReceipt
 
   declare -r application_path=${1:?application_path not passed to check_stapled_notarisation_ticket}
-  codesign_output=$(codesign --display --verbose=2 "${application_path}" 2>&1)
+  codesign_output=$(/usr/bin/codesign --display --verbose=2 "${application_path}" 2>&1)
 
   if echo "${codesign_output}" | grep -q "Authority=Apple Mac OS Application Signing"; then
     return 0
@@ -218,7 +218,7 @@ function verify {
     #   specific binary has failed code signing checks. 
     # Output is either x86_64 or arm64e
     # Currently don't care about which binary has fialed code signing checks just that one or the other has
-    echo "$(basename "${application_path}") ${RED}${codesign_error_message}${RESET}"
+    echo "$(/usr/bin/basename "${application_path}") ${RED}${codesign_error_message}${RESET}"
     return 1
   fi
 }
