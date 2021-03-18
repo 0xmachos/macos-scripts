@@ -83,7 +83,6 @@ function get_applications {
 }
 
 
-
 function verify_app_signature {
   # verify_app_signature
   #   Verify that app at $application_path is correctly code signed
@@ -141,6 +140,7 @@ function check_stapled_notarisation_ticket {
     return 1
   fi
 }
+
 
 function check_if_app_from_app_store {
   # check_if_app_from_app_store
