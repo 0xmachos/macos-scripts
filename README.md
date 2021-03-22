@@ -22,9 +22,12 @@ Various scripts for macOS tasks
 - Dumps Bill of Material (Bom) files 
 - Usage: `./pkg-expand /tmp/example.pkg`
 
-### `signature_check`
-- Highlight applications which are not code signed and applications that are [notarized](https://developer.apple.com/documentation/security/notarizing_your_app_before_distribution)
-- Usage: `./signature_check`
+### `c0design`
+- Wrapper for `codesign`, `spctl` & `stapler`
+- Check codesigning and notarisation of application at $application_path
+  - Equivalent of `codesign --verify --deep --strict` && `spctl --assess --type exec`
+- Check codesigning and notarisation of all non system (thirdparty) applications
+- Usage: `./c0design {usage | list | verify $application_path | thirdparty}`
 
 
 ### `x86_check`
