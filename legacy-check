@@ -1,0 +1,99 @@
+#!/usr/bin/env zsh
+# macos-scripts/legacy-check
+
+# legacy-check
+#   Check for 32-bit applications
+#   Check for loaded and on disk third party kernel extensions
+
+set -euo pipefail
+# -e exit if any command returns non-zero status code
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+
+function get_x86_applications {
+  # get_x86_applications
+  #   Can also use:
+  #     mdfind "kMDItemExecutableArchitectures == '*i386*' && kMDItemExecutableArchitectures != '*x86*'"
+  #     Via @rtrouton https://twitter.com/rtrouton/status/1130482310762115072
+  #   See also: https://eclecticlight.co/2019/05/22/how-to-find-all-your-32-bit-apps-a-non-buyers-guide/
+
+  while IFS=$'\n' read -r app; do 
+    x86_apps+=("${app}"); 
+  done < <(system_profiler SPApplicationsDataType \
+            | grep -E '^    .*:$|64-Bit \(Intel\):|Location' \
+            | grep -A1 ': No' \
+            | grep 'Location' \
+            | sed -e 's/.*Location: //' )
+  # Massive thanks to @MacLemon for this oneliner
+}
+
+
+function get_kexts {
+  # get_kexts
+  #   Get list of loaded non apple kexts via kmutil
+  #   Could also use kextstat but that calls kmutil
+  #   Get list of third party kexts in /Library/Extensions/
+
+  while IFS=$'\n' read -r app; do 
+    loaded_kernel_extensions+=("${kext}"); 
+  done < <(kmutil showloaded --show loaded --variant-suffix release \
+          | grep -v 'com.apple' \
+          | tail -n +2 \
+          | head -n 3 \
+          | awk '{print $6}')
+
+  on_disk_kernel_extensions=(/Library/Extensions/*)
+}
+
+
+function main {
+
+  declare -a x86_apps
+  declare -a loaded_kernel_extensions
+  declare -a on_disk_kernel_extensions
+  
+  
+  get_x86_applications
+  
+  if ! [[ ${#x86_apps[@]} -eq 0 ]]; then
+    echo "32-bit applications:"
+
+    for app in "${x86_apps[@]}"; do
+      echo "  ${app}"
+    done
+  else
+    echo "No 32-bit applications found"
+  fi 
+  
+
+  get_kexts
+
+  if ! [[ ${#loaded_kernel_extensions[@]} -eq 0 ]]; then
+    echo "Loaded third party Kernel Extensions:"
+
+    for kext in "${loaded_kernel_extensions[@]}"; do
+      echo "  ${kext}"
+    done
+  else
+    echo "No loaded third party Kernel Extensions found"
+  fi
+
+  if ! [[ ${#on_disk_kernel_extensions[@]} -eq 0 ]]; then
+    echo "On disk third party Kernel Extensions:"
+
+    for kext in "${on_disk_kernel_extensions[@]}"; do
+      echo "  ${kext}"
+    done
+  else
+    echo "No on disk third party Kernel Extensions found"
+  fi
+}
+
+main "$@"
