@@ -33,10 +33,10 @@ function check_developer_tools {
 
 function clean_xcode {
   # Delete old iOS simulators
-
-  echo "[🗑] Deleting old Xcode iOS Simulators"
   
-  if check_developer_tools; then 
+  if check_developer_tools; then
+    echo "[🗑] Deleting old Xcode iOS Simulators"
+    
     xcrun simctl delete unavailable
   fi
 }
