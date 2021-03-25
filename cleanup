@@ -62,9 +62,9 @@ function clean_ruby {
   # Remove old versions of gems 
   # that are not required to meet a dependency.
 
-  echo "[🗑] Cleaning Ruby Gems"
-
   if [ -x "/usr/local/opt/ruby/bin/gem" ]; then
+    echo "[🗑] Cleaning Ruby Gems"
+    
     /usr/local/opt/ruby/bin/gem cleanup >/dev/null 2>&1
   fi
 }
