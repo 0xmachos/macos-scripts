@@ -36,6 +36,7 @@ function find_files {
     FILES+=("${file}"); 
   done < <(/usr/bin/find . -maxdepth 1 -type f \
             -not -iwholename '*.git*'   \
+            -not -iwholename '*.tar.xz' \
             | /usr/bin/sort -u)
 }
 
