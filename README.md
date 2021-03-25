@@ -30,7 +30,7 @@ Various scripts for macOS tasks
 - Usage: `./c0design {usage | list | verify $application_path | thirdparty}`
 
 
-### `x86_check`
-- Check whole system for 32-bit Apps
-- Usage: `./x86_check`
+### `legacy-check`
+- Check system for 32-bit applications & third party kernel extensions
+- Usage: `./legacy-check`
 
