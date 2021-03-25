@@ -47,9 +47,10 @@ function clean_brew {
   # and remove old versions of installed formulae.
   # Scrub the cache of the latest versions
 
-  echo "[🗑] Cleaning Brew"
   
   if [ -x "$(command -v brew)" ]; then
+    echo "[🗑] Cleaning Brew"
+
     brew cleanup -s
     # Remove cache for installed formula and cask 
     rm -rf "$(brew --cache)"
