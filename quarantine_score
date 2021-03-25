@@ -23,7 +23,6 @@ tput sgr0;
 
 readonly RED="$(tput setaf 1)"
 readonly RESET="$(tput sgr0)"
-readonly BOLD="$(tput bold)"
 
 ### END Colours ###
 
