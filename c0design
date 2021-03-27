@@ -218,11 +218,16 @@ function verify_pkg {
   # verify_pkg
   #   Verify that package at $path_to_verify is correctly code signed
   #   Save pkgutil output in $pkgutil_output for priting errors
+  #   Verify that package is notarised via spctl
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_pkg}
 
   if pkgutil_output=$(/usr/sbin/pkgutil --check-signature "${path_to_verify}"); then
-    echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed and properly verified"
+    if /usr/sbin/spctl --assess --type install "${path_to_verify}"; then
+      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET}"
+    else
+      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified but ${RED}not notarised{$RESET}"
+    fi
   else
     pkgutil_error_output=$(echo "${pkgutil_output}" | tail -n +2 | awk -F ':' '{print $2}')
     # I've only tested this on "no signature" output so might be fucked for other error output
