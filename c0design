@@ -163,8 +163,8 @@ function check_if_app_from_app_store {
 }
 
 
-function verify {
-  # verify
+function verify_app {
+  # verify_app
   #   Use the above helper functions to check application
   #     1. Properly signed
   #     2. Notarised
@@ -254,7 +254,7 @@ function main {
       get_applications
 
       for app in "${apps[@]}"; do
-        verify "${app}"
+        verify_app "${app}"
       done 
       ;;
 
