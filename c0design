@@ -253,6 +253,10 @@ function main {
   #   is not empty. i.e. with ${2+} ./c0design verify aaa 
   #   for some reason it thinks argv[2] empty
   declare -a apps
+  declare codesign_output
+  declare codesign_error_output
+  declare pkgutil_output
+  declare pkgutil_error_output
 
   case "${arg}" in
 
