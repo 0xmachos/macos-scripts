@@ -104,15 +104,15 @@ function verify_app_signature {
 }
 
 
-function check_notarsied {
-  # check_notarsied
+function check_app_notarsied {
+  # check_app_notarsied
   #   Check if app is allowed to be executed under current system policy
   #   On systems with default settings this will check if app is notarised
-  #   If SecAssessment has been disabled spctl notarised checks will fail
+  #   If SecAssessment has been disabled spctl notarisation checks will fail
   #   If system has SecAssessment disabled (e.g. spctl --master-disable has been executed)
   #     you can execute codesign --test-requirement="=notarized" --verify to check notarisation
 
-  declare -r path_to_verify=${1:?path_to_verify not passed to check_notarsied}
+  declare -r path_to_verify=${1:?path_to_verify not passed to check_app_notarsied}
 
   if /usr/sbin/spctl --assess --type exec "${path_to_verify}" >/dev/null 2>&1; then
     # Check if system policy allows execution of this code aka Notarised
@@ -178,7 +178,7 @@ function verify_app {
 
   if verify_app_signature "${path_to_verify}"; then
     
-    if check_notarsied "${path_to_verify}"; then
+    if check_app_notarsied "${path_to_verify}"; then
       
       if check_stapled_notarisation_ticket "${path_to_verify}"; then
         
