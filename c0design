@@ -203,7 +203,7 @@ function verify_app {
     fi
 
   else
-    codesign_error_message=$(echo "${codesign_output}" | head -n 1 | awk -F ':' '{print $2}')
+    codesign_error_output=$(echo "${codesign_output}" | head -n 1 | awk -F ':' '{print $2}')
     # head -n 1 removes the "In architecture" output which indicates in a Fat/Universal binary which
     #   specific binary has failed code signing checks. 
     # Output is either x86_64 or arm64e
