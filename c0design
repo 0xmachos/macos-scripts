@@ -289,7 +289,9 @@ function main {
 
       for app in "${apps[@]}"; do
         verify_app "${app}"
-      done 
+      done
+      # Execution time roughly ~60 seconds
+      # Dependent on number and size of apps
       ;;
 
     *)
