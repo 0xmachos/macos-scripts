@@ -35,8 +35,9 @@ function usage {
   echo
 
   echo "  list        List all non system applications (excludes Xcode & Safari)"
-  echo "  verify      Check codesigning and notarisation of application at \$path_to_verify"
-  echo "              Equivalent of codesign --verify --deep --strict && spctl --assess --type exec "
+  echo "  verify      Check codesigning and notarisation of application or package at \$path_to_verify"
+  echo "              Equivalent of codesign --verify --deep --strict && spctl --assess --type exec"
+  echo "              Equivalent of pkgutil --check-signature && spctl --assess --type install" 
   echo "  thirdparty  Check codesigning and notarisation of all non system applications"
   echo
   
