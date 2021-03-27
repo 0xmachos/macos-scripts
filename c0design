@@ -31,11 +31,11 @@ readonly GREEN=$(tput setaf 64)
 function usage {
   echo 
   echo "  Wrapper for codesign, spctl & stapler"
-  echo "  Usage: ./c0design {usage | list | verify \$application_path | thirdparty}"
+  echo "  Usage: ./c0design {usage | list | verify \$path_to_verify | thirdparty}"
   echo
 
   echo "  list        List all non system applications (excludes Xcode & Safari)"
-  echo "  verify      Check codesigning and notarisation of application at \$application_path"
+  echo "  verify      Check codesigning and notarisation of application at \$path_to_verify"
   echo "              Equivalent of codesign --verify --deep --strict && spctl --assess --type exec "
   echo "  thirdparty  Check codesigning and notarisation of all non system applications"
   echo
@@ -85,16 +85,16 @@ function get_applications {
 
 function verify_app_signature {
   # verify_app_signature
-  #   Verify that app at $application_path is correctly code signed
+  #   Verify that app at $path_to_verify is correctly code signed
   #   Save codesign output in $codesign_output for priting errors
 
-  declare -r application_path=${1:?application_path not passed to verify_app_signature}
+  declare -r path_to_verify=${1:?path_to_verify not passed to verify_app_signature}
 
-  if codesign_output="$(/usr/bin/codesign --verify --deep --strict "${application_path}" 2>&1)"; then
+  if codesign_output="$(/usr/bin/codesign --verify --deep --strict "${path_to_verify}" 2>&1)"; then
     # codesign sends all output to stderr, redirect it to std out
     return 0
   elif [[ "${codesign_output}" =~ No\ such\ file\ or\ directory ]]; then
-    echo "${application_path}: No such file or directory"
+    echo "${path_to_verify}: No such file or directory"
     exit 1
   else
     return 1
@@ -110,9 +110,9 @@ function check_notarsied {
   #   If system has SecAssessment disabled (e.g. spctl --master-disable has been executed)
   #     you can execute codesign --test-requirement="=notarized" --verify to check notarisation
 
-  declare -r application_path=${1:?application_path not passed to check_notarsied}
+  declare -r path_to_verify=${1:?path_to_verify not passed to check_notarsied}
 
-  if /usr/sbin/spctl --assess --type exec "${application_path}" >/dev/null 2>&1; then
+  if /usr/sbin/spctl --assess --type exec "${path_to_verify}" >/dev/null 2>&1; then
     # Check if system policy allows execution of this code aka Notarised
     return 0 
   else
@@ -123,7 +123,7 @@ function check_notarsied {
 
 function check_stapled_notarisation_ticket {
   # check_stapled_notarisation_ticket
-  #   Check if the application at $application_path has a locally stapled
+  #   Check if the application at $path_to_verify has a locally stapled
   #     notarisation ticket
   #   Not having a locally staped ticket is NOT a security issue, Apple can
   #     hold the ticket on their servers with macOS reaching out to Apple to
@@ -131,9 +131,9 @@ function check_stapled_notarisation_ticket {
   #   See  Howard Oakley's (@howardnoakley) tweet:
   #     https://twitter.com/howardnoakley/status/1369328846466650120
 
-  declare -r application_path=${1:?application_path not passed to check_stapled_notarisation_ticket}
+  declare -r path_to_verify=${1:?path_to_verify not passed to check_stapled_notarisation_ticket}
 
-  if /usr/bin/stapler validate "${application_path}" >/dev/null 2>&1; then
+  if /usr/bin/stapler validate "${path_to_verify}" >/dev/null 2>&1; then
     # Check if app has a notarisation ticket stapled to it
     return 0
   else
@@ -148,10 +148,10 @@ function check_if_app_from_app_store {
   #     or from outside App Store based on intermediate certificate used
   #     to sign the leaf certificate
   #   Could also use 
-  #     mdls "${application_path}" -name kMDItemAppStoreHasReceipt
+  #     mdls "${path_to_verify}" -name kMDItemAppStoreHasReceipt
 
-  declare -r application_path=${1:?application_path not passed to check_if_app_from_app_store}
-  codesign_output=$(/usr/bin/codesign --display --verbose=2 "${application_path}" 2>&1)
+  declare -r path_to_verify=${1:?path_to_verify not passed to check_if_app_from_app_store}
+  codesign_output=$(/usr/bin/codesign --display --verbose=2 "${path_to_verify}" 2>&1)
 
   if echo "${codesign_output}" | grep -q "Authority=Apple Mac OS Application Signing"; then
     return 0
@@ -172,34 +172,34 @@ function verify {
   #     4. From Mac App Store or Developer ID App
   #   echo to command line based on above criteria
 
-  declare -r application_path=${1:?application_path not passed to verify}
+  declare -r path_to_verify=${1:?path_to_verify not passed to verify_app}
 
-  if verify_app_signature "${application_path}"; then
+  if verify_app_signature "${path_to_verify}"; then
     
-    if check_notarsied "${application_path}"; then
+    if check_notarsied "${path_to_verify}"; then
       
-      if check_stapled_notarisation_ticket "${application_path}"; then
+      if check_stapled_notarisation_ticket "${path_to_verify}"; then
         
-        if check_if_app_from_app_store "${application_path}"; then
-          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (App Store)"
+        if check_if_app_from_app_store "${path_to_verify}"; then
+          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (App Store)"
           # Wording from man page is "all codes verified properly as requested"
         else
-          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (Developer ID)"
+          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (Developer ID)"
         fi
       
       else
         
-        if check_if_app_from_app_store "${application_path}"; then
-          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (App Store)"
+        if check_if_app_from_app_store "${path_to_verify}"; then
+          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (App Store)"
           # Apps from the AppStore never have stapled tickets
         else
-          echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (Developer ID)"
+          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (Developer ID)"
           # Developer ID apps can have stapled tickets, not a requiremnt though
         fi
       fi
     
     else
-      echo "$(/usr/bin/basename "${application_path}") ${GREEN}signed and properly verified${RESET} but ${RED}not notarised${RESET}"
+      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed and properly verified${RESET} but ${RED}not notarised${RESET}"
     fi
 
   else
@@ -208,7 +208,7 @@ function verify {
     #   specific binary has failed code signing checks. 
     # Output is either x86_64 or arm64e
     # Currently don't care about which binary has fialed code signing checks just that one or the other has
-    echo "$(/usr/bin/basename "${application_path}")${RED}${codesign_error_message}${RESET}"
+    echo "$(/usr/bin/basename "${path_to_verify}")${RED}${codesign_error_output}${RESET}"
     return 1
   fi
 }
@@ -220,11 +220,11 @@ function main {
   # Detect and react to the user hitting CTRL + C
 
   declare -r arg=${1:-"usage"}
-  declare -r application_path=${2:-null}
-  # Set application_path to "null" if argv[2] is null or unset
+  declare -r path_to_verify=${2:-null}
+  # Set $path_to_verify to "null" if argv[2] is null or unset
   # This is a probably a dirty hack that needs a proper solution
   # Should be able to use parameter expansion but bug when using ${2+} which 
-  #   causes application_path to be set to empty even when argv[2] 
+  #   causes $path_to_verify to be set to empty even when argv[2] 
   #   is not empty. i.e. with ${2+} ./c0design verify aaa thinks argv[2] empt
 
   declare -a apps
@@ -244,7 +244,7 @@ function main {
       ;;
 
     verify|-v|--verify)
-      if [[ "${application_path}" == "null" ]]; then
+      if [[ "${path_to_verify}" == "null" ]]; then
         usage
       fi
       verify "${application_path}"
