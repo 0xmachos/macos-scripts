@@ -2,7 +2,8 @@
 # macos-scripts/c0design
 
 # c0design
-#   Wrapper for codesign, spctl & stapler
+#   Wrapper for codesign, spctl, stapler & pkgutil
+#   Check code signature and notarisation of applications and packages
 #   See Howard Oakley's (@howardnoakley) work:
 #     https://eclecticlight.co/2019/05/31/can-you-tell-whether-code-has-been-notarized/
 #     https://eclecticlight.co/2020/10/30/code-signatures-2-how-to-check-them/
