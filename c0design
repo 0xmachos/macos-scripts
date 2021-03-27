@@ -157,10 +157,9 @@ function check_if_app_from_app_store {
 
   if echo "${codesign_output}" | grep -q "Authority=Apple Mac OS Application Signing"; then
     return 0
-    # echo "Mac App Store"
+  
   elif echo "${codesign_output}" | grep -q "Authority=Developer ID Certification Authority"; then
     return 1
-    # echo "Developer App"
   fi
 }
 
