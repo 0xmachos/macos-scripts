@@ -214,6 +214,25 @@ function verify_app {
 }
 
 
+function verify_pkg {
+  # verify_pkg
+  #   Verify that package at $path_to_verify is correctly code signed
+  #   Save pkgutil output in $pkgutil_output for priting errors
+
+  declare -r path_to_verify=${1:?path_to_verify not passed to verify_pkg}
+
+  if pkgutil_output=$(/usr/sbin/pkgutil --check-signature "${path_to_verify}"); then
+    echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed and properly verified"
+  else
+    pkgutil_error_output=$(echo "${pkgutil_output}" | tail -n +2 | awk -F ':' '{print $2}')
+    # I've only tested this on "no signature" output so might be fucked for other error output
+    # Use pkgutil to expand then flatten a package to reproduce
+    echo "$(/usr/bin/basename "${path_to_verify}")${RED}${pkgutil_error_output}${RESET}"
+    exit 1
+  fi
+}
+
+
 function main {
 
   trap ctrl_c SIGINT
@@ -247,7 +266,12 @@ function main {
       if [[ "${path_to_verify}" == "null" ]]; then
         usage
       fi
-      verify "${application_path}"
+
+      if [[ "${path_to_verify}" =~ .pkg ]]; then
+        verify_pkg "${path_to_verify}"
+      else
+        verify_app "${path_to_verify}"
+      fi
       ;;
 
     thirdparty|-tp|--third-party)      
