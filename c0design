@@ -215,6 +215,39 @@ function verify_app {
 }
 
 
+function verify_package_signature {
+  # verify_package_signature
+  #   Verify that package (.pkg) at $path_to_verify is correctly code signed
+  #   Save codesign output in $pkgutil_error_output for printing errors
+
+  if pkgutil_output=$(/usr/sbin/pkgutil --check-signature "${path_to_verify}"); then
+    return 0
+  else
+    return 1
+  fi
+}
+
+
+function check_package_notarised {
+  # check_package_notarised
+  #   Check if package is allowed to be run and install under current system policy
+  #   On systems with default settings this will check if app is notarised
+  #   If SecAssessment has been disabled spctl notarisation checks will fail
+  #   If system has SecAssessment disabled (e.g. spctl --master-disable has been executed)
+  #     you can execute codesign --test-requirement="=notarized" --verify to check notarisation
+
+  declare -r path_to_verify=${1:?path_to_verify not passed to check_package_notarised}
+
+  if /usr/sbin/spctl --assess --type install "${path_to_verify}"; then
+      return 0
+      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET}"
+    else
+      return 1
+      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified but ${RED}not notarised{$RESET}"
+    fi
+}
+
+
 function verify_pkg {
   # verify_pkg
   #   Verify that package at $path_to_verify is correctly code signed
@@ -223,18 +256,27 @@ function verify_pkg {
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_pkg}
 
-  if pkgutil_output=$(/usr/sbin/pkgutil --check-signature "${path_to_verify}"); then
-    if /usr/sbin/spctl --assess --type install "${path_to_verify}"; then
-      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET}"
+  if verify_package_signature "${path_to_verify}"; then
+
+    if check_package_notarised "${path_to_verify}"; then
+
+      if check_stapled_notarisation_ticket "${path_to_verify}"; then
+        echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket)"
+      else
+        echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET}"
+      fi
+
     else
       echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified but ${RED}not notarised{$RESET}"
     fi
+
   else
     pkgutil_error_output=$(echo "${pkgutil_output}" | tail -n +2 | awk -F ':' '{print $2}')
+    # tail -n +2 removes the first line of output "Package "install2.pkg":"
     # I've only tested this on "no signature" output so might be fucked for other error output
     # Use pkgutil to expand then flatten a package to reproduce
     echo "$(/usr/bin/basename "${path_to_verify}")${RED}${pkgutil_error_output}${RESET}"
-    exit 1
+    return 1
   fi
 }
 
