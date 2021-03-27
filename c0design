@@ -245,7 +245,7 @@ function main {
   # Detect and react to the user hitting CTRL + C
 
   declare -r arg=${1:-"usage"}
-  declare -r path_to_verify=${2:-null}
+  declare -r path_to_verify=${2:-"null"}
   # Set $path_to_verify to "null" if argv[2] is null or unset
   # This is a probably a dirty hack that needs a proper solution
   # Should be able to use parameter expansion but bug when using ${2+} which 
