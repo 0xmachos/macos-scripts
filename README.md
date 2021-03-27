@@ -23,11 +23,12 @@ Various scripts for macOS tasks
 - Usage: `./pkg-expand /tmp/example.pkg`
 
 ### `c0design`
-- Wrapper for `codesign`, `spctl` & `stapler`
-- Check codesigning and notarisation of application at $application_path
+- Wrapper for `codesign`, `spctl`, `stapler` & `pkgutil`
+- Check codesigning and notarisation of application or package (`.pkg`) at `$path_to_verify`
   - Equivalent of `codesign --verify --deep --strict` && `spctl --assess --type exec`
+  - Equivalent of `pkgutil --check-signature` && `spctl --assess --type install`
 - Check codesigning and notarisation of all non system (thirdparty) applications
-- Usage: `./c0design {usage | list | verify $application_path | thirdparty}`
+- Usage: `./c0design {usage | list | verify $path_to_verify | thirdparty}`
 
 
 ### `legacy-check`
