@@ -250,8 +250,8 @@ function main {
   # This is a probably a dirty hack that needs a proper solution
   # Should be able to use parameter expansion but bug when using ${2+} which 
   #   causes $path_to_verify to be set to empty even when argv[2] 
-  #   is not empty. i.e. with ${2+} ./c0design verify aaa thinks argv[2] empt
-
+  #   is not empty. i.e. with ${2+} ./c0design verify aaa 
+  #   for some reason it thinks argv[2] empty
   declare -a apps
 
   case "${arg}" in
