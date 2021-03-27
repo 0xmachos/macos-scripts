@@ -35,10 +35,10 @@ function usage {
   echo
 
   echo "  list        List all non system applications (excludes Xcode & Safari)"
-  echo "  verify      Check codesigning and notarisation of application or package at \$path_to_verify"
+  echo "  verify      Check code signing and notarisation of application or package at \$path_to_verify"
   echo "              Equivalent of codesign --verify --deep --strict && spctl --assess --type exec"
   echo "              Equivalent of pkgutil --check-signature && spctl --assess --type install" 
-  echo "  thirdparty  Check codesigning and notarisation of all non system applications"
+  echo "  thirdparty  Check code signing and notarisation of all non system applications"
   echo
   
   exit 0
@@ -87,7 +87,7 @@ function get_applications {
 function verify_app_signature {
   # verify_app_signature
   #   Verify that app at $path_to_verify is correctly code signed
-  #   Save codesign output in $codesign_output for priting errors
+  #   Save codesign output in $codesign_output for printing errors
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_app_signature}
 
