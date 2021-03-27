@@ -31,7 +31,7 @@ readonly GREEN=$(tput setaf 64)
 
 function usage {
   echo 
-  echo "  Wrapper for codesign, spctl & stapler"
+  echo "  Wrapper for codesign, spctl, stapler & pkgutil"
   echo "  Usage: ./c0design {usage | list | verify \$path_to_verify | thirdparty}"
   echo
 
