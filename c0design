@@ -240,10 +240,8 @@ function check_package_notarised {
 
   if /usr/sbin/spctl --assess --type install "${path_to_verify}"; then
       return 0
-      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET}"
     else
       return 1
-      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified but ${RED}not notarised{$RESET}"
     fi
 }
 
