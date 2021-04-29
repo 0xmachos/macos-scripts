@@ -255,19 +255,20 @@ function verify_pkg {
   #   Verify that package is notarised via spctl
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_pkg}
+  declare -r path_basename=$(/usr/bin/basename "${path_to_verify}")
 
   if verify_package_signature "${path_to_verify}"; then
 
     if check_package_notarised "${path_to_verify}"; then
 
       if check_stapled_notarisation_ticket "${path_to_verify}"; then
-        echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket)"
+        echo "${path_basename} ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket)"
       else
-        echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET}"
+        echo "${path_basename} ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET}"
       fi
 
     else
-      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified but ${RED}not notarised{$RESET}"
+      echo "${path_basename} ${GREEN}signed, properly verified but ${RED}not notarised{$RESET}"
     fi
 
   else
@@ -275,7 +276,7 @@ function verify_pkg {
     # tail -n +2 removes the first line of output "Package "install2.pkg":"
     # I've only tested this on "no signature" output so might be fucked for other error output
     # Use pkgutil to expand then flatten a package to reproduce
-    echo "$(/usr/bin/basename "${path_to_verify}")${RED}${pkgutil_error_output}${RESET}"
+    echo "${path_basename} ${RED}${pkgutil_error_output}${RESET}"
     return 1
   fi
 }
