@@ -21,8 +21,10 @@ IFS=$'\n\t'
 tput sgr0; 
 # reset colors
 
-readonly RED="$(tput setaf 1)"
-readonly RESET="$(tput sgr0)"
+RED="$(tput setaf 1)"
+readonly RED
+RESET="$(tput sgr0)"
+readonly RESET
 
 ### END Colours ###
 
