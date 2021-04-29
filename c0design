@@ -60,7 +60,8 @@ function ctrl_c {
 function get_applications {
   # get_applications
   #   Get list of all applications on system via system_profiler
-  #   Ignore system applications, produces array of non system apps
+  #   Ignore system applications, Xcode and Safari
+  #   Produces array, $apps, of non system apps
   
   while IFS=$'\n' read -r app; do
    
