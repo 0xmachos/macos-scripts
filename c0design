@@ -175,6 +175,7 @@ function verify_app {
   #   echo to command line based on above criteria
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_app}
+  declare -r path_basename=$(/usr/bin/basename "${path_to_verify}")
 
   if verify_app_signature "${path_to_verify}"; then
     
@@ -183,25 +184,25 @@ function verify_app {
       if check_stapled_notarisation_ticket "${path_to_verify}"; then
         
         if check_if_app_from_app_store "${path_to_verify}"; then
-          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (App Store)"
+          echo "${path_basename} ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (App Store)"
           # Wording from man page is "all codes verified properly as requested"
         else
-          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (Developer ID)"
+          echo "${path_basename} ${GREEN}signed, properly verified & notarised${RESET} (stapled ticket) (Developer ID)"
         fi
       
       else
         
         if check_if_app_from_app_store "${path_to_verify}"; then
-          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (App Store)"
+          echo "${path_basename}) ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (App Store)"
           # Apps from the AppStore never have stapled tickets
         else
-          echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (Developer ID)"
+          echo "${path_basename} ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (Developer ID)"
           # Developer ID apps can have stapled tickets, not a requiremnt though
         fi
       fi
     
     else
-      echo "$(/usr/bin/basename "${path_to_verify}") ${GREEN}signed and properly verified${RESET} but ${RED}not notarised${RESET}"
+      echo "${path_basename} ${GREEN}signed and properly verified${RESET} but ${RED}not notarised${RESET}"
     fi
 
   else
@@ -210,7 +211,7 @@ function verify_app {
     #   specific binary has failed code signing checks. 
     # Output is either x86_64 or arm64e
     # Currently don't care about which binary has fialed code signing checks just that one or the other has
-    echo "$(/usr/bin/basename "${path_to_verify}")${RED}${codesign_error_output}${RESET}"
+    echo "${path_basename} ${RED}${codesign_error_output}${RESET}"
     return 1
   fi
 }
