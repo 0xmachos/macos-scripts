@@ -222,7 +222,7 @@ function verify_package_signature {
   #   Verify that package (.pkg) at $path_to_verify is correctly code signed
   #   Save codesign output in $pkgutil_error_output for printing errors
 
-  if pkgutil_output=$(/usr/sbin/pkgutil --check-signature "${path_to_verify}"); then
+  if pkgutil_output="$(/usr/sbin/pkgutil --check-signature "${path_to_verify}")"; then
     return 0
   else
     return 1
