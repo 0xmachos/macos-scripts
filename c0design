@@ -21,11 +21,14 @@ IFS=$'\n\t'
 tput sgr0; 
 # reset colors
 
-readonly RESET=$(tput sgr0)
-
-readonly RED=$(tput setaf 1)
-readonly YELLOW=$(tput setaf 3)
-readonly GREEN=$(tput setaf 64)
+RESET=$(tput sgr0)
+readonly RESET
+RED=$(tput setaf 1)
+readonly RED
+YELLOW=$(tput setaf 3)
+readonly YELLOW
+GREEN=$(tput setaf 64)
+readonly GREEN
 ### END Colours ###
 
 
@@ -175,7 +178,8 @@ function verify_app {
   #   echo to command line based on above criteria
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_app}
-  declare -r path_basename=$(/usr/bin/basename "${path_to_verify}")
+  path_basename=$(/usr/bin/basename "${path_to_verify}")
+  readonly path_basename
 
   if verify_app_signature "${path_to_verify}"; then
     
@@ -255,7 +259,8 @@ function verify_pkg {
   #   Verify that package is notarised via spctl
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_pkg}
-  declare -r path_basename=$(/usr/bin/basename "${path_to_verify}")
+  path_basename=$(/usr/bin/basename "${path_to_verify}")
+  readonly path_basename
 
   if verify_package_signature "${path_to_verify}"; then
 
