@@ -179,7 +179,6 @@ function verify_app {
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_app}
   path_basename=$(/usr/bin/basename "${path_to_verify}")
-  readonly path_basename
 
   if verify_app_signature "${path_to_verify}"; then
     
@@ -260,7 +259,6 @@ function verify_pkg {
 
   declare -r path_to_verify=${1:?path_to_verify not passed to verify_pkg}
   path_basename=$(/usr/bin/basename "${path_to_verify}")
-  readonly path_basename
 
   if verify_package_signature "${path_to_verify}"; then
 
