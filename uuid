@@ -14,6 +14,8 @@ function main {
   declare -a UUID_PATHS=($HOME/Library/Application\ Support/CrashReporter/* \
   											$HOME/Library/Dictionaries/CoreDataUbiquitySupport/* \
   											$HOME/Library/Containers/*/Data/Library/Application\ Support/CrashReporter/*)
+  # $HOME/Library/Keychains/$UUID/
+  #		Inside $HOME/Library/Keychains/ there will be a directory named after the UUID of the system
   declare -a UUID_FILES=($HOME/Pictures/Photos\ Library.photoslibrary/database/Photos.sqlite.lock)
 
   echo "Paths which potentially contain UUID:"
