@@ -1,0 +1,41 @@
+#!/usr/bin/env zsh
+# macos-scripts/uuid
+
+# uuid
+#  Print paths and files which potentially contain the UUID (IOPlatformUUID)
+
+set -uo pipefail
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+
+function main {
+
+  declare -a UUID_PATHS=($HOME/Library/Application\ Support/CrashReporter/* \
+  											$HOME/Library/Dictionaries/CoreDataUbiquitySupport/* \
+  											$HOME/Library/Containers/*/Data/Library/Application\ Support/CrashReporter/*)
+  declare -a UUID_FILES=($HOME/Pictures/Photos\ Library.photoslibrary/database/Photos.sqlite.lock)
+
+  echo "Paths which potentially contain UUID:"
+  for UUID_PATH in "${UUID_PATHS[@]}"; do
+  	echo "${UUID_PATH}"
+  done
+
+  echo
+  echo "Files which potentially contain UUID:"
+  for UUID_FILE in "${UUID_FILES[@]}"; do
+  	echo "${UUID_FILE}"
+  	# cat "${UUID_FILE}" | grep -oE '[[:alnum:]]{8}(-[[:alnum:]]{4}){3}-[[:alnum:]]{12}'
+  done
+
+  UUID=$(ls $HOME/Library/Application\ Support/CrashReporter/* | grep -oE '[[:alnum:]]{8}(-[[:alnum:]]{4}){3}-[[:alnum:]]{12}' | head -n 1)
+  echo
+  echo "UUID is probably: ${UUID}"
+  echo
+
+  echo "Other files which might contain the UUID:"
+  mdfind "${UUID}" | grep -v '/Library/Application\ Support/' | grep -v 'CoreDataUbiquitySupport' | grep -v 'Photos.sqlite.lock'
+
+}
+
+main "$@"
