@@ -1,0 +1,151 @@
+#!/usr/bin/env zsh
+# macos-scripts/entitlements/treebeard
+
+# treebeard
+
+set -uo pipefail
+# -o pipefail force pipelines to fail on first non-zero status code
+# -u prevent using undefined variables
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+
+### Define Colours ###
+tput sgr0; 
+# reset colors
+
+RESET=$(tput sgr0)
+readonly RESET
+RED=$(tput setaf 1)
+readonly RED
+YELLOW=$(tput setaf 3)
+readonly YELLOW
+GREEN=$(tput setaf 64)
+readonly GREEN
+### END Colours ###
+
+
+function usage {
+  echo 
+  echo "  "
+  echo "  Usage: ./treebeard"
+  echo
+
+  echo "  shit        some shit"
+  echo
+  
+  exit 0
+}
+
+
+### Utility Functions ###
+# ctrl_c
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+### END Utility Functions ###
+
+function get_binaries {
+  # get_binaries
+
+  for binary in /Applications/*.app/Contents/MacOS/* \
+                /usr/bin/* \
+                /usr/local/bin/* \
+                /usr/sbin/*; do
+    
+    if [[ "${binary}" =~ Xcode.app ]]; then
+      continue
+      # Skip Xcode because it takes ages to run codesign on it
+    elif [[ "${binary}" =~ Safari.app ]]; then
+      continue
+      # Skip Safari because it is a system application
+      # TODO: Skip other systems apps like Pages?
+    fi
+  
+    binaries+=("${binary}");
+
+  done
+}
+
+
+function check_hardened_runtime {
+  # check_hardened_runtime
+  # 
+
+  declare -r binary_to_check=${1:?binary_to_check not passed to check_hardened_runtime}
+
+  if codesign --display --verbose "${binary_to_check}" 2>&1 | awk 'FNR == 4 {print $4}' | grep --quiet 'runtime'; then
+    # awk: print 4th column of 4th line
+    #   e.g. flags=0x0(none), flags=0x10000(runtime), flags=0x12000(library-validation,runtime)
+    # For bitmask values see: 
+    #   https://github.com/apple/darwin-xnu/blob/8f02f2a044b9bb1ad951987ef5bab20ec9486310/osfmk/kern/cs_blobs.h
+    return 0
+  else
+    return 1
+  fi
+}
+
+
+function check_entitlements {
+  # check_entitlements
+
+  declare -r binary=${1:?binary_to_check not passed to check_entitlements}
+
+  declare -a entitlements
+  entitlements=(com.apple.security.cs.allow-dyld-environment-variables\
+                  com.apple.security.cs.disable-library-validation\
+                  com.apple.private.security.clear-library-validation\
+                  com.apple.security.get-task-allow\
+                  com.apple.security.cs.allow-unsigned-executable-memory\
+                  com.apple.security.files.downloads.read-only\
+                  com.apple.security.files.all\
+                  com.apple.security.files.user-selected.read-only\
+                  com.apple.private.security.clear-library-validation\
+                  com.apple.private.tcc.allow)
+
+    codesign_entitlements_output=$(/usr/bin/codesign --display --entitlements - "${binary}" 2>&1)
+    current_binary="${binary}"
+    
+    for entitlement in "${entitlements[@]}"; do
+      
+      if echo "${codesign_entitlements_output}" | grep --quiet "${entitlement}"; then
+
+        if [[ "${current_binary}" = "${binary}" ]]; then 
+          
+          echo
+          if check_hardened_runtime "${binary}"; then
+            echo "${binary} (${GREEN}Hardened Runtime${RESET})"
+          else
+            echo "${binary}"
+          fi
+          
+          current_binary=""
+        fi        
+          echo "${entitlement}"
+      fi
+    done
+}
+
+
+function main {
+
+  trap ctrl_c SIGINT
+  # Detect and react to the user hitting CTRL + C
+
+  declare -a binaries
+
+  get_binaries
+
+  for binary in "${binaries[@]}"; do
+    check_entitlements "${binary}"
+  done
+
+}
+
+main "$@"
