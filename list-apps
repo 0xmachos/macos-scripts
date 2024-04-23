@@ -1,0 +1,44 @@
+#!/usr/bin/env zsh
+# macos-scripts/list-apps
+
+# list-apps
+#  List installed applications
+#  Explitict goal of not using system_profiler
+
+set -euo pipefail
+# -e exit if any command returns non-zero status code
+# -u prevent using undefined variables
+# -o pipefail force pipelines to fail on first non-zero status code
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+### UTILITY FUNCTIONS ###
+# ctrl_c
+# usage
+
+function ctrl_c {
+  echo -e "\\n[❌] ${USER} has chosen to quit!"
+  exit 1
+}
+
+### END UTILITY FUNCTIONS ###
+
+
+function main {
+
+  trap ctrl_c SIGINT
+  # Detect and react to the user hitting CTRL + C
+  
+  declare -a DIRECTORIES=("/Applications" "$HOME/Applications")
+  readonly DIRECTORIES
+
+  for directory in "${DIRECTORIES[@]}"; do
+    find "${directory}" -type d -name "*.app" -depth 1 -exec basename {} .app \;
+  done
+
+}
+
+main "$@"
