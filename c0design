@@ -196,7 +196,7 @@ function verify_app {
       else
         
         if check_if_app_from_app_store "${path_to_verify}"; then
-          echo "${path_basename}) ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (App Store)"
+          echo "${path_basename} ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (App Store)"
           # Apps from the AppStore never have stapled tickets
         else
           echo "${path_basename} ${GREEN}signed, properly verified & notarised${RESET} ${YELLOW}(no stapled ticket)${RESET} (Developer ID)"
