@@ -70,8 +70,9 @@ function get_applications {
    
     if [[ "${app}" =~ /System/ ]]; then
       continue
-      # Skip everything in /System/Applications/ and /System/Library/
-      #   since they can't be third party apps
+      # Skip everything in /System/Applications/, /System/Library/ and /Library/Apple/System/ 
+      #  since they can't be third party apps
+      # Because of /Library/Apple/System do not use start-of-line anchor in regex e.g ^/System/
     elif [[ "${app}" =~ Xcode.app ]]; then
       continue
       # Skip Xcode because it takes ages to run codesign on it
