@@ -331,7 +331,7 @@ function main {
       fi
       ;;
 
-    thirdparty|-tp|--third-party)      
+    thirdparty|-tp|-3p|--third-party)
       get_applications
 
       for app in "${apps[@]}"; do
