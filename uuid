@@ -2,7 +2,8 @@
 # macos-scripts/uuid
 
 # uuid
-#  Print paths and files which potentially contain the UUID (IOPlatformUUID)
+#	Print paths and files which potentially contain the UUID (IOPlatformUUID)
+# Instead of executing something like ioreg -d2 -c IOPlatformExpertDevice | awk -F\" '/IOPlatformUUID/{print $(NF-1)}'
 
 set -uo pipefail
 # -u prevent using undefined variables
