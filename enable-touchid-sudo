@@ -49,7 +49,7 @@ function enable_touchid_sudo {
   
   else
 
-    get_sudo "to create /etc/pam.d/sudo_local"
+    sudo --validate --prompt="[⚠️ ] Password required to create /etc/pam.d/sudo_local: "
     
     if sudo install -m "444" -g "wheel" -o "root" "/dev/null" "/etc/pam.d/sudo_local"; then
       # Use install to create the file /etc/pam.d/sudo_local
