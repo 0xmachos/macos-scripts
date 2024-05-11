@@ -35,7 +35,7 @@ function main {
   	# cat "${UUID_FILE}" | grep -oE '[[:alnum:]]{8}(-[[:alnum:]]{4}){3}-[[:alnum:]]{12}'
   done
 
-  UUID=$(ls $HOME/Library/Application\ Support/CrashReporter/* | grep -oE '[[:alnum:]]{8}(-[[:alnum:]]{4}){3}-[[:alnum:]]{12}' | head -n 1)
+  UUID=$(echo "$HOME/Library/Application Support/CrashReporter/"* | grep -oE '[[:alnum:]]{8}(-[[:alnum:]]{4}){3}-[[:alnum:]]{12}' | head -n 1)
   echo
   echo "UUID is probably: ${UUID}"
   echo
