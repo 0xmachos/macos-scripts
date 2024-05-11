@@ -7,7 +7,9 @@
 set -uo pipefail
 # -u prevent using undefined variables
 # -o pipefail force pipelines to fail on first non-zero status code
-
+setopt null_glob
+# Make any glob that doesn't match expand to nothing
+#   prevents errors when trying to iterate over non-existent files
 
 function main {
 
