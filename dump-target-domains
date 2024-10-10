@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# macos-scripts/dump-target-domains
+
+# dump-target-domain
+#   Dumps the target domain (e.g gui/501) of all non Apple services
+#   This relies on the "hints" provided by launchctl e.g
+#     $ launchctl print at.obdev.littlesnitchmini.helper
+#     Unrecognized target specifier, did you mean
+#     gui/501/at.obdev.littlesnitchmini.helperx
+
+IFS=$'\n\t'
+# Set Internal Field Separator to newlines and tabs
+# This makes bash consider newlines and tabs as separating words
+# See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+
+function main {
+
+	SERVICES=()
+
+  while read -r service; do
+     SERVICES+=("${service}"); 
+  done < <(launchctl list | grep -v 'com.apple' | tail -n +2 | awk '{print $3}')
+
+  for service in "${SERVICES[@]}"; do
+    launchctl blame "${service}" 2>&1 | grep 'did you mean' -A 1 | tail -n 1
+  done
+
+}
+
+main "$@"
