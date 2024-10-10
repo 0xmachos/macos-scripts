@@ -10,24 +10,66 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  analyse:
+  # This workflow contains a single job called "shellcheck"
+  shellcheck:
     # The type of runner that the job will run on
     runs-on: macos-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
-      
-    - name: Get Shellcheck
-      run: |
-        curl -sL https://github.com/koalaman/shellcheck/releases/download/v0.7.2/shellcheck-v0.7.2.darwin.x86_64.tar.xz -o shellcheck-v0.7.2.tar.xz
-        tar -xf shellcheck-v0.7.2.tar.xz
-
-    # Runs a set of commands using the runners shell
-    - name: Execute test
+    # Checks-out your repository under ${{ github.workspace }}, so your job can access it
+    - uses: actions/checkout@v4
+    
+    - name: Download Shellcheck
       env:
-        TERM: xterm-256color
-        PATH: $PATH:shellcheck-v0.7.2/
-      run: ./test
+        SHELLCEHCK_LATEST_VERSION: "0.10.0"
+      run: |
+        
+        curl --silent --location --output  "${{ github.workspace }}/shellcheck-v${SHELLCEHCK_LATEST_VERSION}.tar.xz" \
+        "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCEHCK_LATEST_VERSION}/shellcheck-v${SHELLCEHCK_LATEST_VERSION}.darwin.aarch64.tar.xz"
+
+        tar -xf "${{ github.workspace }}/shellcheck-v${SHELLCEHCK_LATEST_VERSION}.tar.xz"
+        mv "${{ github.workspace }}/shellcheck-v${SHELLCEHCK_LATEST_VERSION}/shellcheck" \
+            "${{ github.workspace }}/shellcheck"
+    
+    - name: Print shellcheck version
+      run: |
+        "${{ github.workspace }}/shellcheck" --version
+    
+    - name: Execute test
+      run: |
+        declare -a ERRORS
+        declare -a FILES
+
+        while IFS=$'\n' read -r file; do 
+          FILES+=("${file}"); 
+        done < <(/usr/bin/find "${{ github.workspace }}" -maxdepth 1 -type f \
+                  -not -iwholename '*.git*'   \
+                  -not -iwholename '*venv*'   \
+                  -not -iwholename '*.tar.xz' \
+                  -not -name 'shellcheck' \
+                  | /usr/bin/sort -u)
+
+        for file in "${FILES[@]}"; do
+          if /usr/bin/file "${file}" | /usr/bin/grep --quiet "shell" || \
+              /usr/bin/file "${file}" | /usr/bin/grep --quiet "bash" || \
+              /usr/bin/file "${file}" | /usr/bin/grep --quiet "zsh"; then
+
+              if "${{ github.workspace }}/shellcheck" --shell=bash "${file}" ; then
+                echo "[PASS] $(/usr/bin/basename "${file}")"
+              else
+                echo "[FAIL] $(/usr/bin/basename "${file}")"
+                ERRORS+=("${file}")
+              fi
+          fi
+        done
+
+        if [[ ${#ERRORS[@]} -eq 0 ]]; then
+          # If ERRORS empty then 
+          echo "[PASS] No errors, hooray"
+          exit 0
+        else
+          # If ERRORS not empty, print the names of files which failed
+          echo "[FAIL] These files failed linting: ${ERRORS[*]}"
+          exit 1
+        fi
