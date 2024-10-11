@@ -18,7 +18,9 @@ IFS=$'\n\t'
 # usage
 
 function ctrl_c {
+  # shellcheck disable=SC2317
   echo -e "\\n[❌] ${USER} has chosen to quit!"
+  # shellcheck disable=SC2317
   exit 1
 }
 
@@ -143,29 +145,29 @@ function third_party_kexts {
 
 function main {
 
-  declare -r arg=${1:-" "}
-
   trap ctrl_c SIGINT
   # Detect and react to the user hitting CTRL + C
-  declare -a functions
-  functions=(timestamp version_info is_admin hardware_info time_stats filesystem_info security_info \
-            full_disk_access_check launchd_stuff third_party_kexts)
+
+  declare -r arg=${1:-""}
 
   case "${arg}" in
 
     usage|help|-h|--help|🤷‍♂️|🤷‍♀️|"¯\_(ツ)_/¯")
       usage
-      shift
       ;;
     
     *)
-      echo
-      for function in "${functions[@]}"; do
-        "${function}"
-        echo
-      done
+      timestamp
+      version_info
+      is_admin
+      hardware_info
+      time_stats
+      filesystem_info
+      security_info
+      full_disk_access_check
+      launchd_stuff
+      third_party_kexts
       exit 0
-      shift
       ;;
 
   esac
